@@ -15,13 +15,17 @@
 <div *ngIf="! currentUser">
 	You aren't logged in.
 
-	<button (click)="login()">Login!</button>
+	<button mat-button
+	        (click)="login()"
+	>Login!</button>
 </div>
 
 <div *ngIf="currentUser">
 	Hi {{ currentUser.displayName }}
 
-	<button (click)="logout()">Logout!</button>
+	<button mat-button
+	        (click)="logout()"
+	>Logout!</button>
 </div>
 
 <router-outlet></router-outlet>
