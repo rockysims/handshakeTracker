@@ -26,7 +26,7 @@ export class AppComponent {
 	}
 
 	login() {
-		this.afAuth.auth.signInWithPopup(new auth.FacebookAuthProvider());
+		this.afAuth.auth.signInWithRedirect(new auth.FacebookAuthProvider());
 	}
 
 	logout() {
