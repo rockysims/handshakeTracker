@@ -9,8 +9,8 @@
 		"build:prod": "ng build --aot --prod --base-href \"https://rockysims.github.io/handshakeTracker/\"",
 		"deploy": "npm run build:prod && ngh -d dist/handshakeTracker",
 		"test": "ng test",
-		"lint": "ng lint",https://handshaketracker.firebaseapp.com/__/auth/handler
-		"e2e",: "ng e2e"
+		"lint": "ng lint",
+		"e2e": "ng e2e"
 	},
 	"private": true,
 	"dependencies": {
