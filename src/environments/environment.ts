@@ -3,7 +3,15 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+	production: false,
+	firebase: {
+		apiKey: 'AIzaSyCuTA9ocfGFN924xbOY2zEey_u09wuIKo0',
+		authDomain: 'handshaketracker.firebaseapp.com',
+		databaseURL: 'https://handshaketracker.firebaseio.com',
+		projectId: 'handshaketracker',
+		storageBucket: 'handshaketracker.appspot.com',
+		messagingSenderId: '257305979665'
+	}
 };
 
 /*
