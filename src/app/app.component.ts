@@ -1,5 +1,7 @@
 import { Component } from "@angular/core";
+import { AngularFireAuth } from "@angular/fire/auth";
 import { AngularFirestore } from "@angular/fire/firestore";
+import { auth } from "firebase";
 import { Observable } from "rxjs";
 
 @Component({
@@ -12,8 +14,22 @@ export class AppComponent {
 
 	items: Observable<any[]>;
 
-	constructor(db: AngularFirestore) {
+	constructor(
+		public db: AngularFirestore,
+		public afAuth: AngularFireAuth
+	) {
 		this.items = db.collection("items").valueChanges();
 	}
 
+	get currentUser() {
+		return this.afAuth.auth.currentUser;
+	}
+
+	login() {
+		this.afAuth.auth.signInWithPopup(new auth.FacebookAuthProvider());
+	}
+
+	logout() {
+		this.afAuth.auth.signOut();
+	}
 }
