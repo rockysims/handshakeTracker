@@ -1,0 +1,14 @@
+<div style="display: flex;">
+	<nav>
+		<a mat-button routerLink="/add" routerLinkActive="active">Add</a>
+		<a mat-button routerLink="/browse" routerLinkActive="active">Browse</a>
+	</nav>
+	<span class="fill-space"></span>
+	<span *ngIf="! currentUser">
+		<button mat-stroked-button (click)="login()"><i class="fa fa-sign-in"></i> Login</button>
+	</span>
+	<span *ngIf="currentUser">
+		<button mat-stroked-button (click)="logout()"><i class="fa fa-sign-out"></i></button>
+	</span>
+</div>
+<mat-divider></mat-divider>
