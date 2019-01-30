@@ -1,6 +1,6 @@
 <form>
 	<mat-form-field class="full-width">
-		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="myControl" [matAutocomplete]="auto">
+		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="myControl" [matAutocomplete]="auto" (blur)="onNameBlur()">
 		<mat-autocomplete #auto="matAutocomplete">
 			<mat-option *ngFor="let name of names" [value]="name">
 				{{name}}
@@ -10,6 +10,21 @@
 
 	<div class="vertical-spacer"></div>
 	<div>
-		<app-tags></app-tags>
+		<app-tags (change)="onTagsChanged()"></app-tags>
 	</div>
+
+
+
+	<br/><br/>
+	newEntry.name: <br/>
+	{{newEntry.name}}<br/>
+	tags:<br/>
+	<ul>
+		<li class="text" *ngFor="let tag of tagsComp.tags">
+			{{tag}}
+		</li>
+	</ul>
+
+
+
 </form>

@@ -1,5 +1,5 @@
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
-import {Component, ElementRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, Output, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete} from '@angular/material';
 import {Observable} from 'rxjs';
@@ -24,6 +24,8 @@ export class TagsComponent {
 	@ViewChild('tagInput') tagInput: ElementRef<HTMLInputElement>;
 	@ViewChild('auto') matAutocomplete: MatAutocomplete;
 
+	@Output() change = new EventEmitter();
+
 	constructor() {
 		this.filteredTags = this.tagCtrl.valueChanges.pipe(
 			startWith(null),
@@ -40,6 +42,8 @@ export class TagsComponent {
 			// Add our tag
 			if ((value || '').trim()) {
 				this.tags.push(value.trim());
+
+				this.change.emit()
 			}
 
 			// Reset the input value
@@ -56,11 +60,15 @@ export class TagsComponent {
 
 		if (index >= 0) {
 			this.tags.splice(index, 1);
+
+			this.change.emit()
 		}
 	}
 
 	selected(event: MatAutocompleteSelectedEvent): void {
 		this.tags.push(event.option.viewValue);
+		this.change.emit();
+
 		this.tagInput.nativeElement.value = '';
 		this.tagCtrl.setValue(null);
 	}
