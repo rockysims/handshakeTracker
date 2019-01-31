@@ -26,6 +26,7 @@ import { HeaderComponent } from './header/header.component';
 import { AddComponent } from './add/add.component';
 import { BrowseComponent } from './browse/browse.component';
 import { TagsComponent } from './tags/tags.component';
+import { AutofocusDirective } from './autofocus.directive';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -56,6 +57,7 @@ const FORMS_IMPORTS = [
 		AddComponent,
 		BrowseComponent,
 		TagsComponent,
+		AutofocusDirective,
 	],
 	imports: [
 		BrowserModule,
