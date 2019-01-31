@@ -2,6 +2,8 @@ import {Component, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {TagsComponent} from "../tags/tags.component";
 
+// import { debounceTime } from 'rxjs/operators';
+
 interface Entry {
 	id: number|null,
 	name: string,
@@ -14,9 +16,15 @@ interface Entry {
 	styleUrls: ['./add.component.less']
 })
 export class AddComponent {
-	public myControl = new FormControl();
+	public nameCtrl = new FormControl();
 	public names = ['Yona', 'Rocky', 'Yoda', 'Ronny'];
 	@ViewChild(TagsComponent) tagsComp: TagsComponent;
+
+	// constructor() {
+	// 	// this.nameCtrl.valueChanges.pipe(debounceTime(500)).subscribe(name => {
+	// 	// 	console.log('debounced name: ', name);
+	// 	// });
+	// }
 
 	public newEntry: Entry = {
 		id: null,
@@ -25,7 +33,7 @@ export class AddComponent {
 	};
 
 	public onNameBlur() {
-		this.newEntry.name = this.myControl.value;
+		this.newEntry.name = this.nameCtrl.value;
 		this.save();
 	}
 

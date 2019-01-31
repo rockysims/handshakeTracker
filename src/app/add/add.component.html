@@ -1,6 +1,6 @@
 <form>
 	<mat-form-field class="full-width">
-		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="myControl" [matAutocomplete]="auto" (blur)="onNameBlur()" [autofocus]>
+		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="nameCtrl" [matAutocomplete]="auto" (blur)="onNameBlur()" [autofocus]>
 		<mat-autocomplete #auto="matAutocomplete">
 			<mat-option *ngFor="let name of names" [value]="name">
 				{{name}}
@@ -13,9 +13,15 @@
 		<app-tags (change)="onTagsChanged()"></app-tags>
 	</div>
 
+	<div class="vertical-spacer"></div>
+	LOCATION HERE
+
+	<div class="vertical-spacer"></div>
+	DATE HERE
 
 
-	<br/><br/>
+	<br/><br/><br/><br/>
+	DEBUG:<br/>
 	newEntry.name: <br/>
 	{{newEntry.name}}<br/>
 	tags:<br/>

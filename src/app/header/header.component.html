@@ -5,10 +5,10 @@
 	</nav>
 	<span class="fill-space"></span>
 	<span *ngIf="! currentUser">
-		<button mat-stroked-button (click)="login()"><i class="fa fa-sign-in"></i> Login</button>
+		<button mat-stroked-button (click)="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
 	</span>
 	<span *ngIf="currentUser">
-		<button mat-stroked-button (click)="logout()"><i class="fa fa-sign-out"></i></button>
+		<button mat-stroked-button (click)="logout()"><i class="fas fa-sign-out-alt"></i></button>
 	</span>
 </div>
 <mat-divider></mat-divider>
