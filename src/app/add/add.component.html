@@ -2,7 +2,7 @@
 	<mat-form-field class="full-width">
 		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="nameCtrl" [matAutocomplete]="auto" [autofocus]>
 		<mat-autocomplete #auto="matAutocomplete">
-			<mat-option *ngFor="let name of names" [value]="name">
+			<mat-option *ngFor="let name of guess.names" [value]="name">
 				{{name}}
 			</mat-option>
 		</mat-autocomplete>
@@ -18,18 +18,6 @@
 
 	<div class="vertical-spacer"></div>
 	DATE HERE
-
-
-	<br/><br/><br/><br/>
-	DEBUG:<br/>
-	newEntry.name: <br/>
-	{{newEntry.name}}<br/>
-	tags:<br/>
-	<ul>
-		<li class="text" *ngFor="let tag of tagsComp.tags">
-			{{tag}}
-		</li>
-	</ul>
 
 
 

@@ -1,5 +1,7 @@
-interface Entry {
-	id: number|null,
+interface Entry extends EntryData {
+	id: string
+}
+interface EntryData {
 	name: string,
 	tags: string[]
 }
