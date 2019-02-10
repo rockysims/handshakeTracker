@@ -1,7 +1,12 @@
 <div style="display: flex;">
-	<nav>
-		<a mat-button routerLink="/add" routerLinkActive="active">Add</a>
-		<a mat-button routerLink="/browse" routerLinkActive="active">Browse</a>
+	<nav class="headerNav">
+		<a class="mat-button mat-stroked-button" routerLink="/add" routerLinkActive="active">
+			Add
+		</a>
+		&nbsp;
+		<a class="mat-button mat-stroked-button" routerLink="/browse" routerLinkActive="active">
+			Browse
+		</a>
 	</nav>
 	<span class="fill-space"></span>
 	<span *ngIf="! currentUser">
@@ -11,4 +16,4 @@
 		<button mat-stroked-button (click)="logout()"><i class="fas fa-sign-out-alt"></i></button>
 	</span>
 </div>
-<mat-divider></mat-divider>
+<hr style="border: 1px solid black; opacity: 0.65;"/>
