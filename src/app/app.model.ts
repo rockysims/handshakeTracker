@@ -1,5 +1,6 @@
-interface Entry extends EntryData {
-	id: string
+interface Entry {
+	id: string,
+	data: EntryData
 }
 interface EntryData {
 	name: string,

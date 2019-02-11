@@ -1,0 +1,8 @@
+<app-entry-view
+	[hidden]="editMode !== true"
+	[entry]="entry"
+></app-entry-view>
+<app-entry-editor
+	[hidden]="editMode === true"
+	[entryData]="entry.data"
+></app-entry-editor>

@@ -1,23 +1,14 @@
-<form>
-	<mat-form-field class="full-width">
-		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="nameCtrl" [matAutocomplete]="auto" [autofocus]>
-		<mat-autocomplete #auto="matAutocomplete">
-			<mat-option *ngFor="let name of guess.names" [value]="name">
-				{{name}}
-			</mat-option>
-		</mat-autocomplete>
-	</mat-form-field>
-
+<div *ngIf="loading; else loadedBlock">
+	Loading...<br/>
+	{{loadError}}
+</div>
+<ng-template #loadedBlock>
+	<app-entry-editor
+		[entryData]="entryData"
+		(change)="saveDraft($event)"
+	></app-entry-editor>
 	<div>
-		<app-tags (change)="onTagsChanged()"></app-tags>
+		<button class="mat-button mat-raised-button" (click)="clear()">Clear</button>
+		<button class="mat-button mat-raised-button" (click)="submit()">Submit</button>
 	</div>
-
-	<div class="vertical-spacer"></div>
-	LOCATION HERE
-
-	<div class="vertical-spacer"></div>
-	DATE HERE
-
-
-
-</form>
+</ng-template>

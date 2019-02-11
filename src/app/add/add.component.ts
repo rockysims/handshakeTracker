@@ -1,8 +1,9 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
-import {FormControl} from '@angular/forms';
-import {TagsComponent} from "../tags/tags.component";
-import {debounceTime} from "rxjs/operators";
+import {AngularFirestore, AngularFirestoreDocument, DocumentSnapshot} from "@angular/fire/firestore";
 import {EntryService} from "../entry.service";
+import {BehaviorSubject} from "rxjs";
+import {MatAutocomplete} from "@angular/material";
+import {EntryEditorComponent} from "../entry-editor/entry-editor.component";
 
 @Component({
 	selector: 'app-add',
@@ -10,44 +11,70 @@ import {EntryService} from "../entry.service";
 	styleUrls: ['./add.component.less']
 })
 export class AddComponent implements OnInit {
-	public nameCtrl = new FormControl();
-	public guess = {
-		names: ['Yona', 'Rocky', 'Yoda', 'Ronny']
-	};
-	public entryIdPromise: Promise<string>|null = null;
-	public entryData: EntryData = {
-		name: '',
-		tags: []
-	};
-	@ViewChild(TagsComponent) tagsComp: TagsComponent;
+	public readonly newEntrySavePath: string = 'persist/newEntry';
+	private newEntryDoc: AngularFirestoreDocument<EntryData>;
+	public entryData: EntryData|null = null;
+	public loading: boolean = true;
+	public loadError: string = '';
+	@ViewChild(EntryEditorComponent) entryEditor;
 
-	constructor(private entryService: EntryService) {}
+	constructor(private afs: AngularFirestore,
+				private entryService: EntryService) {}
 
 	ngOnInit() {
-		this.nameCtrl.valueChanges
-			.pipe(debounceTime(500))
-			.subscribe(name => {
-				this.entryData.name = this.nameCtrl.value;
-				this.save();
+		this.newEntryDoc = this.afs.doc(this.newEntrySavePath);
+
+		//load (or create) new entry
+		const self = this;
+		this.newEntryDoc.get()
+			.toPromise()
+			.then((doc) => {
+				if (doc.exists) {
+					return doc.data() as EntryData;
+				} else {
+					const newEntryData = AddComponent.buildBlankEntryData();
+					return self.newEntryDoc.set(newEntryData)
+						.then(() => newEntryData);
+				}
+			})
+			.then(entryData => this.entryData = entryData)
+			.catch(reason => {
+				this.loadError = 'AddComponent failed to get/create newEntry because: ' + reason;
+			})
+			.finally(() => this.loading = false);
+	}
+
+	static buildBlankEntryData(): EntryData {
+		return {
+			name: '',
+			tags: []
+		};
+	}
+
+	clear() {
+		this.entryData = AddComponent.buildBlankEntryData();
+		this.saveDraft(this.entryData);
+	}
+
+	saveDraft(entryData) {
+		this.afs.doc(this.newEntrySavePath)
+			.update(entryData)
+			.catch(reason => {
+				console.error('AddComponent failed to save newEntry because: ', reason);
 			});
 	}
 
-	public onTagsChanged() {
-		this.entryData.tags = this.tagsComp.tags;
-		this.save();
-	}
-
-	public save() {
-		if (this.entryIdPromise === null) {
-			this.entryIdPromise = this.entryService
-				.create(this.entryData)
-				.then(it => it.id);
-		} else {
-			this.entryIdPromise.then(id => {
-				this.entryService.update({id, ...this.entryData} as Entry);
-			}).catch(reason => {
-				console.error('AddComponent failed to resolve entryIdPromise because: ', reason);
+	submit() {
+		this.entryService.create(this.entryEditor.entryData)
+			.then(() => {
+				//TODO: show a success indicator (with link to new entry?)
+				this.clear();
+			})
+			.catch(reason => {
+				console.error('AddComponent failed to save entry because: ', reason);
 			});
-		}
 	}
 }
+
+//TODO: on new entry submitted, clear fields ready for another new entry
+//TODO: save new entry not yet submitted and load it again when 'add' page is shown later

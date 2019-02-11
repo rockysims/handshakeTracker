@@ -1,0 +1,25 @@
+<form>
+	<mat-form-field class="full-width">
+		<input type="text" placeholder="Enter Name" aria-label="Number" matInput [formControl]="nameCtrl" [matAutocomplete]="auto" [autofocus]>
+		<mat-autocomplete #auto="matAutocomplete">
+			<mat-option *ngFor="let name of guess.names" [value]="name">
+				{{name}}
+			</mat-option>
+		</mat-autocomplete>
+	</mat-form-field>
+
+	<div>
+		<app-tags (change)="onTagsChanged()"></app-tags>
+	</div>
+
+	<div class="vertical-spacer"></div>
+	LOCATION HERE
+
+	<div class="vertical-spacer"></div>
+	DATE HERE
+
+
+	<br/><br/><br/>
+	entryData.name:<br/>
+	{{entryData.name}}
+</form>

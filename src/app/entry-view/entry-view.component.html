@@ -1,0 +1,13 @@
+<div>
+	<div>id: {{entry.id}}</div>
+	<div>name: {{entry.name}}</div>
+	<div style="min-height: 30px;">
+		tags:
+		<mat-chip-list>
+			<mat-chip *ngFor="let tag of entry.tags">{{tag}}</mat-chip>
+		</mat-chip-list>
+	</div>
+	<div>
+		<button (click)="delete(entry)" class="mat-raised-button mat-mini-fab"><i class="fas fa-trash"></i></button>
+	</div>
+</div>

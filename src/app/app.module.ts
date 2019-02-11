@@ -27,6 +27,9 @@ import { AddComponent } from './add/add.component';
 import { BrowseComponent } from './browse/browse.component';
 import { TagsComponent } from './tags/tags.component';
 import { AutofocusDirective } from './autofocus.directive';
+import { EntryEditorComponent } from './entry-editor/entry-editor.component';
+import { EntryComponent } from './entry/entry.component';
+import { EntryViewComponent } from './entry-view/entry-view.component';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -58,6 +61,9 @@ const FORMS_IMPORTS = [
 		BrowseComponent,
 		TagsComponent,
 		AutofocusDirective,
+		EntryEditorComponent,
+		EntryComponent,
+		EntryViewComponent,
 	],
 	imports: [
 		BrowserModule,

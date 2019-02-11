@@ -48,7 +48,7 @@ export class EntryService {
 
 	private updateReal(id: string, entryData: EntryData) {
 		console.log('EntryService.update() called with ', [id, entryData]); //TODO: delete this line
-		this.entryDoc = this.db.doc<Entry>(`${ENTRIES_ENDPOINT}/${id}`);
+		this.entryDoc = this.db.doc<EntryData>(`${ENTRIES_ENDPOINT}/${id}`);
 		return this.entryDoc.update(entryData)
 			.catch(reason => {
 				console.error('EntryService failed to update entry ' + id + ' because: ', reason);
@@ -58,7 +58,7 @@ export class EntryService {
 
 	delete(entry: Entry) {
 		console.log('EntryService.delete() called with ', entry); //TODO: delete this line
-		this.entryDoc = this.db.doc<Entry>(`${ENTRIES_ENDPOINT}/${entry.id}`);
+		this.entryDoc = this.db.doc<EntryData>(`${ENTRIES_ENDPOINT}/${entry.id}`);
 		return this.entryDoc.delete()
 			.catch(reason => {
 				console.error('EntryService failed to delete entry ' + entry.id + ' because: ', reason);
