@@ -24,7 +24,7 @@ export class TagsComponent {
 	@ViewChild('tagInput') tagInput: ElementRef<HTMLInputElement>;
 	@ViewChild('auto') matAutocomplete: MatAutocomplete;
 
-	@Output() change = new EventEmitter();
+	@Output() change = new EventEmitter<string[]>();
 
 	constructor() {
 		this.filteredTags = this.tagCtrl.valueChanges.pipe(
@@ -43,7 +43,7 @@ export class TagsComponent {
 			if ((value || '').trim()) {
 				this.tags.push(value.trim());
 
-				this.change.emit()
+				this.change.emit(this.tags)
 			}
 
 			// Reset the input value
@@ -61,13 +61,13 @@ export class TagsComponent {
 		if (index >= 0) {
 			this.tags.splice(index, 1);
 
-			this.change.emit()
+			this.change.emit(this.tags)
 		}
 	}
 
 	selected(event: MatAutocompleteSelectedEvent): void {
 		this.tags.push(event.option.viewValue);
-		this.change.emit();
+		this.change.emit(this.tags);
 
 		this.tagInput.nativeElement.value = '';
 		this.tagCtrl.setValue(null);

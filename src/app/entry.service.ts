@@ -23,9 +23,10 @@ export class EntryService {
 			.pipe(
 				map(actions =>
 					actions.map(a => {
-						const data = a.payload.doc.data() as EntryData;
-						const id = a.payload.doc.id;
-						return { id, ...data } as Entry;
+						return {
+							id: a.payload.doc.id,
+							data: a.payload.doc.data() as EntryData
+						} as Entry;
 					})
 				)
 			);
@@ -41,9 +42,7 @@ export class EntryService {
 	}
 
 	update(entry: Entry) {
-		const entryData = {...entry} as EntryData;
-		delete (entryData as Entry).id;
-		return this.updateReal(entry.id, entryData);
+		return this.updateReal(entry.id, entry.data);
 	}
 
 	private updateReal(id: string, entryData: EntryData) {

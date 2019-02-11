@@ -1,47 +1,51 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {AngularFirestore, AngularFirestoreDocument, DocumentSnapshot} from "@angular/fire/firestore";
 import {EntryService} from "../entry.service";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Subject} from "rxjs";
 import {MatAutocomplete} from "@angular/material";
 import {EntryEditorComponent} from "../entry-editor/entry-editor.component";
+import {debounceTime, takeUntil, takeWhile} from "rxjs/operators";
 
 @Component({
 	selector: 'app-add',
 	templateUrl: './add.component.html',
 	styleUrls: ['./add.component.less']
 })
-export class AddComponent implements OnInit {
-	public readonly newEntrySavePath: string = 'persist/newEntry';
-	private newEntryDoc: AngularFirestoreDocument<EntryData>;
-	public entryData: EntryData|null = null;
-	public loading: boolean = true;
-	public loadError: string = '';
-	@ViewChild(EntryEditorComponent) entryEditor;
+export class AddComponent implements OnInit, OnDestroy {
+	private readonly ngUnsubscribe = new Subject();
+	public readonly entryDraftSavePath: string = 'persist/entryDraft';
+	private entryDraftDoc: AngularFirestoreDocument<EntryData>;
+	public entryData$: BehaviorSubject<EntryData>;
 
 	constructor(private afs: AngularFirestore,
 				private entryService: EntryService) {}
 
 	ngOnInit() {
-		this.newEntryDoc = this.afs.doc(this.newEntrySavePath);
+		this.entryDraftDoc = this.afs.doc(this.entryDraftSavePath);
+		this.entryData$ = new BehaviorSubject<EntryData>(AddComponent.buildBlankEntryData());
 
-		//load (or create) new entry
-		const self = this;
-		this.newEntryDoc.get()
-			.toPromise()
-			.then((doc) => {
+		//load entryData$ and setup saving
+		this.entryDraftDoc.get().toPromise()
+			.then(doc => {
 				if (doc.exists) {
-					return doc.data() as EntryData;
+					this.entryData$.next(doc.data() as EntryData);
 				} else {
-					const newEntryData = AddComponent.buildBlankEntryData();
-					return self.newEntryDoc.set(newEntryData)
-						.then(() => newEntryData);
+					return this.entryDraftDoc.set(this.entryData$.value);
 				}
-			})
-			.then(entryData => this.entryData = entryData)
-			.catch(reason => {
-				this.loadError = 'AddComponent failed to get/create newEntry because: ' + reason;
-			})
-			.finally(() => this.loading = false);
+			}).then(() => {
+				//setup saving
+				this.entryData$.pipe(
+					takeUntil(this.ngUnsubscribe),
+					debounceTime(500)
+				).subscribe(entryData => {
+					this.entryDraftDoc.update(entryData);
+				});
+			});
+	}
+
+	ngOnDestroy() {
+		this.ngUnsubscribe.next();
+		this.ngUnsubscribe.complete();
 	}
 
 	static buildBlankEntryData(): EntryData {
@@ -52,26 +56,14 @@ export class AddComponent implements OnInit {
 	}
 
 	clear() {
-		this.entryData = AddComponent.buildBlankEntryData();
-		this.saveDraft(this.entryData);
-	}
-
-	saveDraft(entryData) {
-		this.afs.doc(this.newEntrySavePath)
-			.update(entryData)
-			.catch(reason => {
-				console.error('AddComponent failed to save newEntry because: ', reason);
-			});
+		this.entryData$.next(AddComponent.buildBlankEntryData());
 	}
 
 	submit() {
-		this.entryService.create(this.entryEditor.entryData)
+		this.entryService.create(this.entryData$.value)
 			.then(() => {
 				//TODO: show a success indicator (with link to new entry?)
 				this.clear();
-			})
-			.catch(reason => {
-				console.error('AddComponent failed to save entry because: ', reason);
 			});
 	}
 }

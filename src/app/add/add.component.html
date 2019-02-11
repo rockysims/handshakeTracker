@@ -1,14 +1,7 @@
-<div *ngIf="loading; else loadedBlock">
-	Loading...<br/>
-	{{loadError}}
+<app-entry-editor
+	[entryData$]="entryData$"
+></app-entry-editor>
+<div>
+	<button class="mat-button mat-raised-button" (click)="clear()">Clear</button>
+	<button class="mat-button mat-raised-button" (click)="submit()">Submit</button>
 </div>
-<ng-template #loadedBlock>
-	<app-entry-editor
-		[entryData]="entryData"
-		(change)="saveDraft($event)"
-	></app-entry-editor>
-	<div>
-		<button class="mat-button mat-raised-button" (click)="clear()">Clear</button>
-		<button class="mat-button mat-raised-button" (click)="submit()">Submit</button>
-	</div>
-</ng-template>

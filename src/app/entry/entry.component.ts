@@ -1,4 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
+import {BehaviorSubject} from "rxjs";
 
 @Component({
 	selector: 'app-entry',
@@ -7,6 +8,7 @@ import {Component, Input, OnInit} from '@angular/core';
 })
 export class EntryComponent implements OnInit {
 	@Input() entry: Entry;
+	entryData$ = new BehaviorSubject<EntryData>(this.entry.data);
 	editMode: boolean = false;
 
 	constructor() {}

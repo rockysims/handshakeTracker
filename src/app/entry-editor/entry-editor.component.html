@@ -9,7 +9,7 @@
 	</mat-form-field>
 
 	<div>
-		<app-tags (change)="onTagsChanged()"></app-tags>
+		<app-tags></app-tags>
 	</div>
 
 	<div class="vertical-spacer"></div>
@@ -21,5 +21,5 @@
 
 	<br/><br/><br/>
 	entryData.name:<br/>
-	{{entryData.name}}
+	{{(entryData$ | async).name}}
 </form>
