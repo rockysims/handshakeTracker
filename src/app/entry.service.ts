@@ -1,67 +1,87 @@
 import {Injectable} from '@angular/core';
 import {AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument} from "@angular/fire/firestore";
 import {Observable} from "rxjs";
-import {map} from "rxjs/operators";
-
-const ENTRIES_ENDPOINT = 'entries';
+import {map, share, switchMap} from "rxjs/operators";
+import {EndpointService} from "./endpoint.service";
 
 @Injectable({
 	providedIn: 'root'
 })
 export class EntryService {
-	public entriesOb: Observable<Entry[]>;
-	private entriesCol: AngularFirestoreCollection<EntryData>;
-	private entryDoc: AngularFirestoreDocument<EntryData>;
+	private entriesCol$: Observable<AngularFirestoreCollection<EntryData>>;
+	public entries$: Observable<Entry[]>;
 
-	constructor(private db: AngularFirestore) {
-		this.entriesCol = db.collection<EntryData>(ENTRIES_ENDPOINT);
+	constructor(private afs: AngularFirestore,
+				private endpointService: EndpointService
+	) {
+		//keep this.entriesCol$ up to date
+		this.entriesCol$ = endpointService.entries().pipe(
+			map(entriesEndpoint => {
+				return afs.collection<EntryData>(entriesEndpoint);
+			}),
+			share()
+		);
 
-		//TODO: look into what snapshotChanges does and make sure this works as expected
-		//	intended to provide access to a list of all the entries except with id added to each entry
-		this.entriesOb = this.entriesCol
-			.snapshotChanges()
-			.pipe(
-				map(actions =>
-					actions.map(a => {
-						return {
-							id: a.payload.doc.id,
-							data: a.payload.doc.data() as EntryData
-						} as Entry;
-					})
-				)
-			);
+		//keep this.entries$ up to date
+		this.entries$ = this.entriesCol$.pipe(
+			switchMap(entriesCol => {
+				return entriesCol.snapshotChanges()
+					.pipe(
+						map(actions =>
+							actions.map(a => {
+								return {
+									id: a.payload.doc.id,
+									data: a.payload.doc.data() as EntryData
+								} as Entry;
+							})
+						)
+					);
+			}),
+			share()
+		);
+
+		// //keep this.entriesReal$ up to date
+		// let entriesColSubscription: Subscription|null = null;
+		// this.entriesCol$.subscribe(entriesCol => {
+		// 	entriesColSubscription?.unsubscribe();
+		// 	entriesColSubscription = entriesCol.snapshotChanges()
+		// 		.pipe(
+		// 			map(actions =>
+		// 				actions.map(a => {
+		// 					return {
+		// 						id: a.payload.doc.id,
+		// 						data: a.payload.doc.data() as EntryData
+		// 					} as Entry;
+		// 				})
+		// 			)
+		// 		).subscribe(this.entriesReal$.next);
+		// });
 	}
 
 	create(entry: EntryData) {
 		console.log('EntryService.create() called with ', entry); //TODO: delete this line
-		return this.entriesCol.add(entry)
-			.catch(reason => {
-				console.error('EntryService failed to add entry because: ', reason);
-				throw reason;
+		return this.entriesCol$.toPromise()
+			.then(entriesCol => {
+				return entriesCol.add(entry);
 			});
 	}
 
 	update(entry: Entry) {
-		return this.updateReal(entry.id, entry.data);
-	}
-
-	private updateReal(id: string, entryData: EntryData) {
-		console.log('EntryService.update() called with ', [id, entryData]); //TODO: delete this line
-		this.entryDoc = this.db.doc<EntryData>(`${ENTRIES_ENDPOINT}/${id}`);
-		return this.entryDoc.update(entryData)
-			.catch(reason => {
-				console.error('EntryService failed to update entry ' + id + ' because: ', reason);
-				throw reason;
-			});
+		console.log('EntryService.update() called with ', entry); //TODO: delete this line
+		return this.getEntryDoc(entry.id)
+			.then(entryDoc => entryDoc.update(entry.data));
 	}
 
 	delete(entry: Entry) {
 		console.log('EntryService.delete() called with ', entry); //TODO: delete this line
-		this.entryDoc = this.db.doc<EntryData>(`${ENTRIES_ENDPOINT}/${entry.id}`);
-		return this.entryDoc.delete()
-			.catch(reason => {
-				console.error('EntryService failed to delete entry ' + entry.id + ' because: ', reason);
-				throw reason;
+		return this.getEntryDoc(entry.id)
+			.then(entryDoc => entryDoc.delete());
+	}
+
+	private getEntryDoc(id: string): Promise<AngularFirestoreDocument<EntryData>> {
+		return this.endpointService.entry(id).toPromise()
+			.then(entryEndpoint => {
+				return this.afs.doc<EntryData>(entryEndpoint);
 			});
 	}
 }

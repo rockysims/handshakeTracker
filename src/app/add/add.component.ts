@@ -1,10 +1,10 @@
 import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {AngularFirestore, AngularFirestoreDocument, DocumentSnapshot} from "@angular/fire/firestore";
+import {AngularFirestore} from "@angular/fire/firestore";
 import {EntryService} from "../entry.service";
-import {BehaviorSubject, Subject} from "rxjs";
-import {MatAutocomplete} from "@angular/material";
+import {Observable, Subject} from "rxjs";
+import {debounceTime, publishReplay, take, takeUntil} from "rxjs/operators";
+import {EntryDraftService} from "../entry-draft.service";
 import {EntryEditorComponent} from "../entry-editor/entry-editor.component";
-import {debounceTime, takeUntil, takeWhile} from "rxjs/operators";
 
 @Component({
 	selector: 'app-add',
@@ -13,34 +13,22 @@ import {debounceTime, takeUntil, takeWhile} from "rxjs/operators";
 })
 export class AddComponent implements OnInit, OnDestroy {
 	private readonly ngUnsubscribe = new Subject();
-	public readonly entryDraftSavePath: string = 'persist/entryDraft';
-	private entryDraftDoc: AngularFirestoreDocument<EntryData>;
-	public entryData$: BehaviorSubject<EntryData>;
+	public entryData$: Observable<EntryData>;
+
+	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 
 	constructor(private afs: AngularFirestore,
-				private entryService: EntryService) {}
+				private entryService: EntryService,
+				private entryDraftService: EntryDraftService) {}
 
 	ngOnInit() {
-		this.entryDraftDoc = this.afs.doc(this.entryDraftSavePath);
-		this.entryData$ = new BehaviorSubject<EntryData>(AddComponent.buildBlankEntryData());
+		this.entryData$ = this.entryDraftService.entryDraft$;
 
-		//load entryData$ and setup saving
-		this.entryDraftDoc.get().toPromise()
-			.then(doc => {
-				if (doc.exists) {
-					this.entryData$.next(doc.data() as EntryData);
-				} else {
-					return this.entryDraftDoc.set(this.entryData$.value);
-				}
-			}).then(() => {
-				//setup saving
-				this.entryData$.pipe(
-					takeUntil(this.ngUnsubscribe),
-					debounceTime(500)
-				).subscribe(entryData => {
-					this.entryDraftDoc.update(entryData);
-				});
-			});
+		//setup saving
+		this.entryEditor.change.pipe(
+			takeUntil(this.ngUnsubscribe),
+			debounceTime(500)
+		).subscribe(this.entryDraftService.save);
 	}
 
 	ngOnDestroy() {
@@ -48,25 +36,20 @@ export class AddComponent implements OnInit, OnDestroy {
 		this.ngUnsubscribe.complete();
 	}
 
-	static buildBlankEntryData(): EntryData {
-		return {
-			name: '',
-			tags: []
-		};
-	}
-
 	clear() {
-		this.entryData$.next(AddComponent.buildBlankEntryData());
+		this.entryDraftService.clear();
 	}
 
 	submit() {
-		this.entryService.create(this.entryData$.value)
-			.then(() => {
-				//TODO: show a success indicator (with link to new entry?)
-				this.clear();
-			});
+		this.entryData$.pipe(
+			publishReplay(1),
+			take(1)
+		).subscribe(entryData => {
+			this.entryService.create(entryData)
+				.then(() => {
+					//TODO: show a success indicator (with link to new entry?)
+					this.clear();
+				});
+		});
 	}
 }
-
-//TODO: on new entry submitted, clear fields ready for another new entry
-//TODO: save new entry not yet submitted and load it again when 'add' page is shown later
