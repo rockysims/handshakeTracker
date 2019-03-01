@@ -12,7 +12,8 @@ import {AutocompleteComponent} from "../autocomplete/autocomplete.component";
 export class EntryEditorComponent implements OnInit {
 	private entryData: EntryData = EntryEditorComponent.buildBlankEntryData();
 	guess = {
-		names: []
+		names: [],
+		tags: []
 	};
 
 	// @ViewChild(MatAutocompleteTrigger) private autocomplete: MatAutocompleteTrigger;
@@ -25,8 +26,9 @@ export class EntryEditorComponent implements OnInit {
 	constructor() {}
 
 	ngOnInit() {
-		//TODO: load guess.names dynamically
+		//TODO: load guesses dynamically
 		this.guess.names = ['Yona', 'Rocky', 'Yoda', 'Ronny'];
+		this.guess.tags = ['Apple', 'Lemon', 'Lime', 'Mango', 'Strawberry'];
 
 		Promise.resolve(this.entryDataOrPromise).then(entryData => {
 			if (entryData) this.update(entryData);
@@ -46,7 +48,6 @@ export class EntryEditorComponent implements OnInit {
 	}
 
 	onTagsChange(tags) {
-		console.log('onTagsChange() chosenTags: ', tags);
 		this.update({tags});
 	}
 

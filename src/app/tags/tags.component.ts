@@ -1,16 +1,16 @@
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
-import {Component, ElementRef, EventEmitter, Output, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete} from '@angular/material';
 import {Observable, Subject} from 'rxjs';
-import {distinctUntilChanged, map, startWith, tap} from 'rxjs/operators';
+import {distinctUntilChanged, map, startWith} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-tags',
 	templateUrl: './tags.component.html',
 	styleUrls: ['./tags.component.less']
 })
-export class TagsComponent {
+export class TagsComponent implements OnInit {
 	selectable = true;
 	removable = true;
 	addOnBlur = true;
@@ -18,26 +18,40 @@ export class TagsComponent {
 	tagCtrl = new FormControl();
 	filteredTags: Observable<string[]>;
 	chosenTags: string[] = [];
-	knownTags: string[] = ['Apple', 'Lemon', 'Lime', 'Orange', 'Strawberry'];
+	knownTags: string[] = [];
 
 	@ViewChild('tagInput') tagInput: ElementRef<HTMLInputElement>;
 	@ViewChild('auto') matAutocomplete: MatAutocomplete;
+	@Input() chosenTagsOrPromise: string[]|Promise<string[]>;
+	@Input() knownTagsOrPromise: string[]|Promise<string[]>;
 	private changeEvent = new Subject<string[]>();
 	@Output() change = new EventEmitter<string[]>();
 
-	constructor() {
+	constructor() {}
+
+	ngOnInit() {
+		Promise.resolve(this.knownTagsOrPromise).then(knownTags => {
+			this.knownTags = knownTags || this.knownTags;
+		});
+
+		Promise.resolve(this.chosenTagsOrPromise).then(chosenTags => {
+			if (chosenTags) this.set(chosenTags);
+
+			//emit change events
+			this.changeEvent.pipe(
+				startWith([]),
+				distinctUntilChanged((a, b) => {
+					return a === b || (
+						a.length === b.length
+						&& JSON.stringify(a) === JSON.stringify(b)
+					);
+				})
+			).subscribe((tags: string[]) => this.change.emit([...tags]));
+		});
+
 		this.filteredTags = this.tagCtrl.valueChanges.pipe(
 			startWith(null),
 			map((tag: string | null) => tag ? this._filter(tag) : this.knownTags.slice()));
-
-		//emit change events
-		this.changeEvent.pipe(
-			startWith([]),
-			distinctUntilChanged((a, b) => {
-				return a.length === b.length
-					&& JSON.stringify(a) === JSON.stringify(b);
-			})
-		).subscribe(tags => this.change.emit(tags));
 	}
 
 	add(event: MatChipInputEvent): void {
@@ -51,7 +65,7 @@ export class TagsComponent {
 			if ((value || '').trim()) {
 				this.chosenTags.push(value.trim());
 
-				this.changeEvent.next(this.chosenTags)
+				this.changeEvent.next(this.chosenTags);
 			}
 
 			// Reset the input value

@@ -6,6 +6,7 @@
 	></app-autocomplete>
 
 	<app-tags
+		[knownTagsOrPromise]="guess.tags"
 		(change)="onTagsChange($event)"
 	></app-tags>
 
