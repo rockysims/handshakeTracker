@@ -15,8 +15,4 @@ export class BrowseComponent implements OnInit {
 	ngOnInit() {
 		this.entriesOb = this.entryService.entriesOb;
 	}
-
-	delete(entry: Entry) {
-		this.entryService.delete(entry);
-	}
 }

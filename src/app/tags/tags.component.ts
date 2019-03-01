@@ -2,8 +2,8 @@ import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {Component, ElementRef, EventEmitter, Output, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MatAutocompleteSelectedEvent, MatChipInputEvent, MatAutocomplete} from '@angular/material';
-import {Observable} from 'rxjs';
-import {map, startWith} from 'rxjs/operators';
+import {Observable, Subject} from 'rxjs';
+import {distinctUntilChanged, map, startWith, tap} from 'rxjs/operators';
 
 @Component({
 	selector: 'app-tags',
@@ -11,25 +11,33 @@ import {map, startWith} from 'rxjs/operators';
 	styleUrls: ['./tags.component.less']
 })
 export class TagsComponent {
-	visible = true;
 	selectable = true;
 	removable = true;
 	addOnBlur = true;
 	separatorKeysCodes: number[] = [ENTER, COMMA];
 	tagCtrl = new FormControl();
 	filteredTags: Observable<string[]>;
-	tags: string[] = ['Lemon'];
-	allTags: string[] = ['Apple', 'Lemon', 'Lime', 'Orange', 'Strawberry'];
+	chosenTags: string[] = [];
+	knownTags: string[] = ['Apple', 'Lemon', 'Lime', 'Orange', 'Strawberry'];
 
 	@ViewChild('tagInput') tagInput: ElementRef<HTMLInputElement>;
 	@ViewChild('auto') matAutocomplete: MatAutocomplete;
-
+	private changeEvent = new Subject<string[]>();
 	@Output() change = new EventEmitter<string[]>();
 
 	constructor() {
 		this.filteredTags = this.tagCtrl.valueChanges.pipe(
 			startWith(null),
-			map((tag: string | null) => tag ? this._filter(tag) : this.allTags.slice()));
+			map((tag: string | null) => tag ? this._filter(tag) : this.knownTags.slice()));
+
+		//emit change events
+		this.changeEvent.pipe(
+			startWith([]),
+			distinctUntilChanged((a, b) => {
+				return a.length === b.length
+					&& JSON.stringify(a) === JSON.stringify(b);
+			})
+		).subscribe(tags => this.change.emit(tags));
 	}
 
 	add(event: MatChipInputEvent): void {
@@ -41,9 +49,9 @@ export class TagsComponent {
 
 			// Add our tag
 			if ((value || '').trim()) {
-				this.tags.push(value.trim());
+				this.chosenTags.push(value.trim());
 
-				this.change.emit(this.tags)
+				this.changeEvent.next(this.chosenTags)
 			}
 
 			// Reset the input value
@@ -56,18 +64,23 @@ export class TagsComponent {
 	}
 
 	remove(tag: string): void {
-		const index = this.tags.indexOf(tag);
+		const index = this.chosenTags.indexOf(tag);
 
 		if (index >= 0) {
-			this.tags.splice(index, 1);
+			this.chosenTags.splice(index, 1);
 
-			this.change.emit(this.tags)
+			this.changeEvent.next(this.chosenTags);
 		}
 	}
 
+	set(tags: string[]): void {
+		this.chosenTags = tags;
+		this.changeEvent.next(this.chosenTags);
+	}
+
 	selected(event: MatAutocompleteSelectedEvent): void {
-		this.tags.push(event.option.viewValue);
-		this.change.emit(this.tags);
+		this.chosenTags.push(event.option.viewValue);
+		this.changeEvent.next(this.chosenTags);
 
 		this.tagInput.nativeElement.value = '';
 		this.tagCtrl.setValue(null);
@@ -76,6 +89,6 @@ export class TagsComponent {
 	private _filter(value: string): string[] {
 		const filterValue = value.toLowerCase();
 
-		return this.allTags.filter(tag => tag.toLowerCase().indexOf(filterValue) === 0);
+		return this.knownTags.filter(tag => tag.toLowerCase().indexOf(filterValue) === 0);
 	}
 }

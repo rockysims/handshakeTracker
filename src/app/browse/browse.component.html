@@ -1,3 +1,6 @@
-<!--<div *ngFor="let entry of entriesOb | async">-->
-	<!--<app-entry [entry]="entry"></app-entry>-->
-<!--</div>-->
+<div *ngFor="let entry of entriesOb | async">
+	<app-entry [entry]="entry"></app-entry>
+</div>
+<div *ngIf="(entriesOb | async)?.length === 0">
+	No entries found.
+</div>

@@ -16,8 +16,6 @@ export class EntryService {
 	constructor(private db: AngularFirestore) {
 		this.entriesCol = db.collection<EntryData>(ENTRIES_ENDPOINT);
 
-		//TODO: look into what snapshotChanges does and make sure this works as expected
-		//	intended to provide access to a list of all the entries except with id added to each entry
 		this.entriesOb = this.entriesCol
 			.snapshotChanges()
 			.pipe(

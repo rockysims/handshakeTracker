@@ -1,8 +1,8 @@
 <app-entry-view
-	[hidden]="editMode !== true"
+	[hidden]="editMode === true"
 	[entry]="entry"
 ></app-entry-view>
 <app-entry-editor
-	[hidden]="editMode === true"
-	[entryData$]="entryData$"
+	[hidden]="editMode !== true"
+	[entryDataOrPromise]="entry.data"
 ></app-entry-editor>

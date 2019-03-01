@@ -30,6 +30,7 @@ import { AutofocusDirective } from './autofocus.directive';
 import { EntryEditorComponent } from './entry-editor/entry-editor.component';
 import { EntryComponent } from './entry/entry.component';
 import { EntryViewComponent } from './entry-view/entry-view.component';
+import { AutocompleteComponent } from './autocomplete/autocomplete.component';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -64,6 +65,7 @@ const FORMS_IMPORTS = [
 		EntryEditorComponent,
 		EntryComponent,
 		EntryViewComponent,
+		AutocompleteComponent,
 	],
 	imports: [
 		BrowserModule,

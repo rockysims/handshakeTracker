@@ -1,5 +1,6 @@
 <app-entry-editor
-	[entryData$]="entryData$"
+	[entryDataOrPromise]="entryDataPromise"
+	(change)="onChange($event)"
 ></app-entry-editor>
 <div>
 	<button class="mat-button mat-raised-button" (click)="clear()">Clear</button>

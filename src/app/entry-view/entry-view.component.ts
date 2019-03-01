@@ -1,4 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
+import {EntryService} from "../entry.service";
 
 @Component({
 	selector: 'app-entry-view',
@@ -8,9 +9,13 @@ import {Component, Input, OnInit} from '@angular/core';
 export class EntryViewComponent implements OnInit {
 	@Input() entry: Entry;
 
-	constructor() {}
+	constructor(private entryService: EntryService) {}
 
 	ngOnInit() {
 
+	}
+
+	delete(entry: Entry) {
+		this.entryService.delete(entry);
 	}
 }

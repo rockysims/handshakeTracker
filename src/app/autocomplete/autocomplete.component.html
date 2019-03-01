@@ -1,0 +1,16 @@
+<mat-form-field class="full-width">
+	<input
+		#inputElement
+		type="text"
+		matInput
+		[attr.aria-label]="placeholder"
+		[placeholder]="placeholder"
+		[formControl]="ctrl"
+		[matAutocomplete]="auto"
+		(change)="$event.stopPropagation()" />
+	<mat-autocomplete #auto="matAutocomplete">
+		<mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+			{{option}}
+		</mat-option>
+	</mat-autocomplete>
+</mat-form-field>

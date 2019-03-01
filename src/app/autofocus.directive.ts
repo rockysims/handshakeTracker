@@ -4,7 +4,7 @@ import { Directive, ElementRef, Input } from "@angular/core";
 	selector: "[autofocus]"
 })
 export class AutofocusDirective {
-	private focus = true;
+	private focus = false;
 
 	constructor(private el: ElementRef) {}
 
@@ -18,6 +18,6 @@ export class AutofocusDirective {
 	}
 
 	@Input() set autofocus(condition: boolean) {
-		this.focus = condition !== false;
+		this.focus = condition === true;
 	}
 }

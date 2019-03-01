@@ -8,7 +8,6 @@ import {BehaviorSubject} from "rxjs";
 })
 export class EntryComponent implements OnInit {
 	@Input() entry: Entry;
-	entryData$ = new BehaviorSubject<EntryData>(this.entry.data);
 	editMode: boolean = false;
 
 	constructor() {}

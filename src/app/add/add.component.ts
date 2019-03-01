@@ -1,66 +1,48 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {AngularFirestore, AngularFirestoreDocument, DocumentSnapshot} from "@angular/fire/firestore";
+import {Component, OnInit, ViewChild} from '@angular/core';
+import {AngularFirestore, AngularFirestoreDocument} from "@angular/fire/firestore";
 import {EntryService} from "../entry.service";
-import {BehaviorSubject, Subject} from "rxjs";
-import {MatAutocomplete} from "@angular/material";
 import {EntryEditorComponent} from "../entry-editor/entry-editor.component";
-import {debounceTime, takeUntil, takeWhile} from "rxjs/operators";
 
 @Component({
 	selector: 'app-add',
 	templateUrl: './add.component.html',
 	styleUrls: ['./add.component.less']
 })
-export class AddComponent implements OnInit, OnDestroy {
-	private readonly ngUnsubscribe = new Subject();
-	public readonly entryDraftSavePath: string = 'persist/entryDraft';
+export class AddComponent implements OnInit {
 	private entryDraftDoc: AngularFirestoreDocument<EntryData>;
-	public entryData$: BehaviorSubject<EntryData>;
+	entryDataPromise: Promise<EntryData>;
+	isLoading = true; //TODO: use in view to disable fields until loaded
+
+	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 
 	constructor(private afs: AngularFirestore,
-				private entryService: EntryService) {}
+				private entryService: EntryService) {
+		const entryDraftSavePath = 'persist/entryDraft';
+		this.entryDraftDoc = this.afs.doc(entryDraftSavePath);
+		this.entryDataPromise = this.entryDraftDoc.get().toPromise()
+			.then(doc => (doc.exists)
+				? doc.data() as EntryData
+				: null
+			);
+	}
 
 	ngOnInit() {
-		this.entryDraftDoc = this.afs.doc(this.entryDraftSavePath);
-		this.entryData$ = new BehaviorSubject<EntryData>(AddComponent.buildBlankEntryData());
-
-		//load entryData$ and setup saving
-		this.entryDraftDoc.get().toPromise()
-			.then(doc => {
-				if (doc.exists) {
-					this.entryData$.next(doc.data() as EntryData);
-				} else {
-					return this.entryDraftDoc.set(this.entryData$.value);
-				}
-			}).then(() => {
-				//setup saving
-				this.entryData$.pipe(
-					takeUntil(this.ngUnsubscribe),
-					debounceTime(500)
-				).subscribe(entryData => {
-					this.entryDraftDoc.update(entryData);
-				});
-			});
+		this.entryDataPromise.then(() => {
+			this.isLoading = false;
+		});
 	}
 
-	ngOnDestroy() {
-		this.ngUnsubscribe.next();
-		this.ngUnsubscribe.complete();
-	}
-
-	static buildBlankEntryData(): EntryData {
-		return {
-			name: '',
-			tags: []
-		};
+	onChange(entryData: EntryData) {
+		console.log('saving draft: ', entryData);
+		this.entryDraftDoc.set(entryData);
 	}
 
 	clear() {
-		this.entryData$.next(AddComponent.buildBlankEntryData());
+		this.entryEditor.clear();
 	}
 
 	submit() {
-		this.entryService.create(this.entryData$.value)
+		this.entryService.create(this.entryEditor.data)
 			.then(() => {
 				//TODO: show a success indicator (with link to new entry?)
 				this.clear();

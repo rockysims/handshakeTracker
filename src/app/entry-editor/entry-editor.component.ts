@@ -1,67 +1,74 @@
-import {Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild} from '@angular/core';
-import {FormControl} from "@angular/forms";
+import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {TagsComponent} from "../tags/tags.component";
-import {distinctUntilChanged, takeUntil} from "rxjs/operators";
-import {BehaviorSubject, Subject} from "rxjs";
-import {MatAutocompleteTrigger} from "@angular/material";
+import {debounceTime} from "rxjs/operators";
+import {Subject} from "rxjs";
+import {AutocompleteComponent} from "../autocomplete/autocomplete.component";
 
 @Component({
 	selector: 'app-entry-editor',
 	templateUrl: './entry-editor.component.html',
 	styleUrls: ['./entry-editor.component.less']
 })
-export class EntryEditorComponent implements OnInit, OnDestroy {
-	private ngUnsubscribe = new Subject();
-	public nameCtrl = new FormControl();
-	public guess = {
+export class EntryEditorComponent implements OnInit {
+	private entryData: EntryData = EntryEditorComponent.buildBlankEntryData();
+	guess = {
 		names: []
 	};
-	@Input() entryData$: BehaviorSubject<EntryData>;
-	@ViewChild(TagsComponent) tagsComp: TagsComponent;
-	@ViewChild(MatAutocompleteTrigger) autocomplete: MatAutocompleteTrigger;
+
+	// @ViewChild(MatAutocompleteTrigger) private autocomplete: MatAutocompleteTrigger;
+	@ViewChild(AutocompleteComponent) private nameComp: AutocompleteComponent;
+	@ViewChild(TagsComponent) private tagsComp: TagsComponent;
+	@Input() private entryDataOrPromise: EntryData|Promise<EntryData>;
+	private changeEvent = new Subject();
+	@Output() private change = new EventEmitter<EntryData>();
 
 	constructor() {}
 
 	ngOnInit() {
-		this.entryData$.pipe(
-			takeUntil(this.ngUnsubscribe),
-			distinctUntilChanged((a, b) => {
-				return a.name === b.name
-					&& a.tags.length == b.tags.length
-					&& JSON.stringify(a.tags) === JSON.stringify(b.tags);
-			})
-		).subscribe(entryData => {
-			this.nameCtrl.setValue(entryData.name);
-			this.tagsComp.tags = entryData.tags;
-		});
-
-		this.nameCtrl.valueChanges.pipe(
-				takeUntil(this.ngUnsubscribe)
-			).subscribe(name => {
-				//open/close name auto complete
-				if (name === '') this.autocomplete.openPanel();
-				else this.autocomplete.closePanel();
-
-				//update name
-				const entryData = {...this.entryData$.value};
-				entryData.name = name;
-				this.entryData$.next(entryData);
-			});
-
-		this.tagsComp.change.pipe(
-			takeUntil(this.ngUnsubscribe)
-		).subscribe(tags => {
-			const entryData = {...this.entryData$.value};
-			entryData.tags = tags;
-			this.entryData$.next(entryData);
-		});
-
 		//TODO: load guess.names dynamically
 		this.guess.names = ['Yona', 'Rocky', 'Yoda', 'Ronny'];
+
+		Promise.resolve(this.entryDataOrPromise).then(entryData => {
+			if (entryData) this.update(entryData);
+
+			const nameExactMatch = this.guess.names.includes(this.entryData.name);
+			if (!nameExactMatch) this.nameComp.focusAndOpen();
+
+			//emit change events (with debounce)
+			this.changeEvent.pipe(
+				debounceTime(500)
+			).subscribe(() => this.change.emit(this.entryData));
+		});
 	}
 
-	ngOnDestroy() {
-		this.ngUnsubscribe.next();
-		this.ngUnsubscribe.complete();
+	onNameChange(name) {
+		this.update({name});
+	}
+
+	onTagsChange(tags) {
+		console.log('onTagsChange() chosenTags: ', tags);
+		this.update({tags});
+	}
+
+	clear() {
+		this.update(EntryEditorComponent.buildBlankEntryData());
+	}
+
+	get data() {
+		return this.entryData;
+	}
+
+	private update(data) {
+		Object.assign(this.entryData, data);
+		this.nameComp.set(this.entryData.name);
+		this.tagsComp.set(this.entryData.tags);
+		this.changeEvent.next();
+	}
+
+	static buildBlankEntryData(): EntryData {
+		return {
+			name: '',
+			tags: []
+		};
 	}
 }
