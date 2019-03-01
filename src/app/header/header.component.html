@@ -1,19 +1,21 @@
-<div style="display: flex;">
-	<nav>
-		<a class="mat-button mat-stroked-button" routerLink="/add" routerLinkActive="active">
-			Add
-		</a>
-		&nbsp;
-		<a class="mat-button mat-stroked-button" routerLink="/browse" routerLinkActive="active">
-			Browse
-		</a>
-	</nav>
-	<span class="fill-space"></span>
-	<span *ngIf="! currentUser">
-		<button mat-stroked-button (click)="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
-	</span>
-	<span *ngIf="currentUser">
-		<button mat-stroked-button (click)="logout()"><i class="fas fa-sign-out-alt"></i></button>
-	</span>
+<div *ngIf="currentUser">
+	<div style="display: flex;">
+		<nav>
+			<a class="mat-button mat-stroked-button" routerLink="/add" routerLinkActive="active">
+				Add
+			</a>
+			&nbsp;
+			<a class="mat-button mat-stroked-button" routerLink="/browse" routerLinkActive="active">
+				Browse
+			</a>
+		</nav>
+		<span class="fill-space"></span>
+		<button
+			mat-stroked-button
+			(click)="logout()"
+		>
+			<i class="fas fa-sign-out-alt"></i>
+		</button>
+	</div>
+	<hr style="border: 1px solid black; opacity: 0.65;"/>
 </div>
-<hr style="border: 1px solid black; opacity: 0.65;"/>

@@ -2,10 +2,14 @@ import {NgModule} from "@angular/core";
 import {RouterModule, Routes} from "@angular/router";
 import {AddComponent} from "./add/add.component";
 import {BrowseComponent} from "./browse/browse.component";
+import {LoginComponent} from "./login/login.component";
+import {LoginRouteGuard} from "./login-route.guard";
 
 const routes: Routes = [
-	{path: 'add', component: AddComponent},
-	{path: 'browse', component: BrowseComponent},
+	{path: 'login', component: LoginComponent},
+	{path: '', component: AddComponent, canActivate: [LoginRouteGuard]},
+	{path: 'add', component: AddComponent, canActivate: [LoginRouteGuard]},
+	{path: 'browse', component: BrowseComponent, canActivate: [LoginRouteGuard]},
 ];
 
 @NgModule({

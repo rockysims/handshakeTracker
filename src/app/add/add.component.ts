@@ -2,6 +2,7 @@ import {Component, OnInit, ViewChild} from '@angular/core';
 import {AngularFirestore, AngularFirestoreDocument} from "@angular/fire/firestore";
 import {EntryService} from "../entry.service";
 import {EntryEditorComponent} from "../entry-editor/entry-editor.component";
+import {EndpointService} from "../endpoint.service";
 
 @Component({
 	selector: 'app-add',
@@ -16,9 +17,9 @@ export class AddComponent implements OnInit {
 	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 
 	constructor(private afs: AngularFirestore,
-				private entryService: EntryService) {
-		const entryDraftSavePath = 'persist/entryDraft';
-		this.entryDraftDoc = this.afs.doc(entryDraftSavePath);
+				private entryService: EntryService,
+				private endpointService: EndpointService) {
+		this.entryDraftDoc = this.afs.doc(this.endpointService.entryDraft());
 		this.entryDataPromise = this.entryDraftDoc.get().toPromise()
 			.then(doc => (doc.exists)
 				? doc.data() as EntryData
@@ -49,6 +50,3 @@ export class AddComponent implements OnInit {
 			});
 	}
 }
-
-//TODO: on new entry submitted, clear fields ready for another new entry
-//TODO: save new entry not yet submitted and load it again when 'add' page is shown later

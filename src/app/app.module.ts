@@ -31,6 +31,8 @@ import { EntryEditorComponent } from './entry-editor/entry-editor.component';
 import { EntryComponent } from './entry/entry.component';
 import { EntryViewComponent } from './entry-view/entry-view.component';
 import { AutocompleteComponent } from './autocomplete/autocomplete.component';
+import { LoginComponent } from './login/login.component';
+import {LoginRouteGuard} from "./login-route.guard";
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -66,6 +68,7 @@ const FORMS_IMPORTS = [
 		EntryComponent,
 		EntryViewComponent,
 		AutocompleteComponent,
+		LoginComponent,
 	],
 	imports: [
 		BrowserModule,
@@ -75,7 +78,7 @@ const FORMS_IMPORTS = [
 		...MATERIAL_IMPORTS,
 		...FORMS_IMPORTS,
 	],
-	providers: [],
+	providers: [ LoginRouteGuard ],
 	bootstrap: [ AppComponent ]
 })
 export class AppModule {

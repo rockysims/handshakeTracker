@@ -16,7 +16,6 @@ export class EntryEditorComponent implements OnInit {
 		tags: []
 	};
 
-	// @ViewChild(MatAutocompleteTrigger) private autocomplete: MatAutocompleteTrigger;
 	@ViewChild(AutocompleteComponent) private nameComp: AutocompleteComponent;
 	@ViewChild(TagsComponent) private tagsComp: TagsComponent;
 	@Input() private entryDataOrPromise: EntryData|Promise<EntryData>;

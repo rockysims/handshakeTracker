@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
-import {auth} from "firebase";
 import {AngularFireAuth} from "@angular/fire/auth";
+import {Router} from "@angular/router";
+import {UserService} from "../user.service";
 
 @Component({
 	selector: 'app-header',
@@ -8,20 +9,16 @@ import {AngularFireAuth} from "@angular/fire/auth";
 	styleUrls: ['./header.component.less'],
 })
 export class HeaderComponent {
-	constructor(
-		public afAuth: AngularFireAuth,
-	) {}
+	constructor(private router: Router,
+				private afAuth: AngularFireAuth,
+				private userService: UserService) {}
 
 	get currentUser() {
-		return this.afAuth.auth.currentUser;
-	}
-
-	login() {
-		this.afAuth.auth.signInWithRedirect(new auth.FacebookAuthProvider());
+		return this.userService.currentUser;
 	}
 
 	logout() {
-		this.afAuth.auth.signOut();
+		this.afAuth.auth.signOut().then(() => this.router.navigateByUrl('/login'));
 	}
 
 }

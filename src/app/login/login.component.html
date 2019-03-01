@@ -1,0 +1,13 @@
+<div style="display: flex;">
+	<button
+		*ngIf="!pendingUser; else elseBlock"
+		style="font-size: 20px; padding: 20px; width: 100%;"
+		mat-stroked-button
+		(click)="login()"
+	>
+		<i class="fas fa-sign-in-alt"></i> Login
+	</button>
+	<ng-template #elseBlock>
+		One moment...
+	</ng-template>
+</div>

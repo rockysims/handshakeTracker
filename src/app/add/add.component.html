@@ -1,8 +1,11 @@
-<app-entry-editor
-	[entryDataOrPromise]="entryDataPromise"
-	(change)="onChange($event)"
-></app-entry-editor>
-<div>
+<div *ngIf="isLoading; else loadedBlock">
+	Loading...
+</div>
+<ng-template #loadedBlock>
+	<app-entry-editor
+		[entryDataOrPromise]="entryDataPromise"
+		(change)="onChange($event)"
+	></app-entry-editor>
 	<button class="mat-button mat-raised-button" (click)="clear()">Clear</button>
 	<button class="mat-button mat-raised-button" (click)="submit()">Submit</button>
-</div>
+</ng-template>
