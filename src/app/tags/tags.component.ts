@@ -39,7 +39,6 @@ export class TagsComponent implements OnInit {
 
 			//emit change events
 			this.changeEvent.pipe(
-				startWith([]),
 				distinctUntilChanged((a, b) => {
 					return a === b || (
 						a.length === b.length
