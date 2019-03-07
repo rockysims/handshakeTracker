@@ -35,9 +35,11 @@ export class AutocompleteComponent implements OnInit {
 		).pipe(
 			map(([options, inputText]) => {
 				const inputTextLowerCase = (inputText as string).toLowerCase();
-				return options.filter(option =>
-					option.toLowerCase().includes(inputTextLowerCase)
-				);
+				// const searchRegex = new RegExp(`(${inputText})`, 'ig');
+				// const replaceRegex = `<b>\$1</b>`;
+				return options
+					.filter(option => option.toLowerCase().includes(inputTextLowerCase));
+					// .map(option => option.replace(searchRegex, replaceRegex));
 			})
 		);
 
