@@ -14,7 +14,7 @@ export class AutocompleteComponent implements OnInit {
 	options: string[] = [];
 	filteredOptions: Observable<string[]>;
 
-	@ViewChild(MatAutocompleteTrigger) private autocomplete: MatAutocompleteTrigger;
+	@ViewChild('inputElement', { read: MatAutocompleteTrigger }) autocomplete: MatAutocompleteTrigger;
 	@ViewChild('inputElement') inputElem: ElementRef;
 	@Input() placeholder: string = '';
 	@Input() autofocus: boolean = false;
@@ -24,17 +24,17 @@ export class AutocompleteComponent implements OnInit {
 	ngOnInit() {
 		Promise.resolve(this.optionsOrPromise).then(options => {
 			this.options = options || this.options;
-		});
 
-		this.filteredOptions = this.ctrl.valueChanges.pipe(
-			startWith(''),
-			map( inputText => {
-				const inputTextLowerCase = inputText.toLowerCase();
-				return this.options.filter(option =>
-					option.toLowerCase().includes(inputTextLowerCase)
-				);
-			})
-		);
+			this.filteredOptions = this.ctrl.valueChanges.pipe(
+				startWith(''),
+				map( inputText => {
+					const inputTextLowerCase = inputText.toLowerCase();
+					return this.options.filter(option =>
+						option.toLowerCase().includes(inputTextLowerCase)
+					);
+				})
+			);
+		});
 
 		this.ctrl.valueChanges.pipe(
 			distinctUntilChanged()
