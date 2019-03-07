@@ -33,6 +33,7 @@ import { EntryViewComponent } from './entry-view/entry-view.component';
 import { AutocompleteComponent } from './autocomplete/autocomplete.component';
 import { LoginComponent } from './login/login.component';
 import {LoginRouteGuard} from "./login-route.guard";
+import { SandboxComponent } from './sandbox/sandbox.component';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -69,6 +70,7 @@ const FORMS_IMPORTS = [
 		EntryViewComponent,
 		AutocompleteComponent,
 		LoginComponent,
+		SandboxComponent,
 	],
 	imports: [
 		BrowserModule,
