@@ -1,6 +1,6 @@
 import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
-import {Observable} from 'rxjs';
+import {combineLatest, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, map, startWith} from 'rxjs/operators';
 import {MatAutocompleteTrigger} from "@angular/material";
 
@@ -10,8 +10,8 @@ import {MatAutocompleteTrigger} from "@angular/material";
 	styleUrls: ['./autocomplete.component.less']
 })
 export class AutocompleteComponent implements OnInit {
+	private options$ = new Subject<string[]>();
 	ctrl = new FormControl();
-	options: string[] = [];
 	filteredOptions: Observable<string[]>;
 
 	@ViewChild('inputElement', { read: MatAutocompleteTrigger }) autocomplete: MatAutocompleteTrigger;
@@ -23,18 +23,23 @@ export class AutocompleteComponent implements OnInit {
 
 	ngOnInit() {
 		Promise.resolve(this.optionsOrPromise).then(options => {
-			this.options = options || this.options;
-
-			this.filteredOptions = this.ctrl.valueChanges.pipe(
-				startWith(''),
-				map( inputText => {
-					const inputTextLowerCase = inputText.toLowerCase();
-					return this.options.filter(option =>
-						option.toLowerCase().includes(inputTextLowerCase)
-					);
-				})
-			);
+			if (options) this.options$.next(options);
 		});
+
+		this.filteredOptions = combineLatest(
+			this.options$,
+			this.ctrl.valueChanges.pipe(
+				startWith(''),
+				distinctUntilChanged()
+			)
+		).pipe(
+			map(([options, inputText]) => {
+				const inputTextLowerCase = (inputText as string).toLowerCase();
+				return options.filter(option =>
+					option.toLowerCase().includes(inputTextLowerCase)
+				);
+			})
+		);
 
 		this.ctrl.valueChanges.pipe(
 			distinctUntilChanged()
