@@ -1,22 +1,21 @@
 import {Injectable} from '@angular/core';
-import {AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument} from "@angular/fire/firestore";
+import {AngularFirestore, AngularFirestoreCollection} from "@angular/fire/firestore";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
-
-const ENTRIES_ENDPOINT = 'entries';
+import {EndpointService} from "./endpoint.service";
 
 @Injectable({
 	providedIn: 'root'
 })
 export class EntryService {
-	public entriesOb: Observable<Entry[]>;
+	public entries$: Observable<Entry[]>;
 	private entriesCol: AngularFirestoreCollection<EntryData>;
-	private entryDoc: AngularFirestoreDocument<EntryData>;
 
-	constructor(private db: AngularFirestore) {
-		this.entriesCol = db.collection<EntryData>(ENTRIES_ENDPOINT);
+	constructor(private db: AngularFirestore,
+				private endpointService: EndpointService) {
+		this.entriesCol = this.db.collection<EntryData>(this.endpointService.entries());
 
-		this.entriesOb = this.entriesCol
+		this.entries$ = this.entriesCol
 			.snapshotChanges()
 			.pipe(
 				map(actions =>
@@ -32,35 +31,21 @@ export class EntryService {
 
 	create(entry: EntryData) {
 		console.log('EntryService.create() called with ', entry); //TODO: delete this line
-		return this.entriesCol.add(entry)
-			.catch(reason => {
-				console.error('EntryService failed to add entry because: ', reason);
-				throw reason;
-			});
+		return this.entriesCol.add(entry);
 	}
 
 	update(entry: Entry) {
-		return this.updateReal(entry.id, entry.data);
-	}
-
-	private updateReal(id: string, entryData: EntryData) {
-		console.log('EntryService.update() called with ', [id, entryData]); //TODO: delete this line
-		this.entryDoc = this.db.doc<EntryData>(`${ENTRIES_ENDPOINT}/${id}`);
-		return this.entryDoc.update(entryData)
-			.catch(reason => {
-				console.error('EntryService failed to update entry ' + id + ' because: ', reason);
-				throw reason;
-			});
+		console.log('EntryService.update() called with ', entry); //TODO: delete this line
+		return this.entryDocFor(entry).update(entry.data);
 	}
 
 	delete(entry: Entry) {
 		console.log('EntryService.delete() called with ', entry); //TODO: delete this line
-		this.entryDoc = this.db.doc<EntryData>(`${ENTRIES_ENDPOINT}/${entry.id}`);
-		return this.entryDoc.delete()
-			.catch(reason => {
-				console.error('EntryService failed to delete entry ' + entry.id + ' because: ', reason);
-				throw reason;
-			});
+		return this.entryDocFor(entry).delete();
+	}
+
+	private entryDocFor(entry: Entry) {
+		return this.db.doc<EntryData>(this.endpointService.entry(entry.id));
 	}
 }
 

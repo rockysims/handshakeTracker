@@ -8,11 +8,11 @@ import {Observable} from "rxjs";
 	styleUrls: ['./browse.component.less']
 })
 export class BrowseComponent implements OnInit {
-	public entriesOb: Observable<Entry[]>;
+	public entries$: Observable<Entry[]>;
 
 	constructor(private entryService: EntryService) {}
 
 	ngOnInit() {
-		this.entriesOb = this.entryService.entriesOb;
+		this.entries$ = this.entryService.entries$;
 	}
 }
