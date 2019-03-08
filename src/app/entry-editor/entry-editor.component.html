@@ -11,11 +11,35 @@
 	></app-tags>
 
 	<div class="vertical-spacer"></div>
-	NOTES HERE
+
+	<mat-form-field  class="full-width">
+		<textarea
+			matInput
+			placeholder="Notes"
+			[formControl]="noteCtrl"
+			(change)="onNoteChange($event.target.value); $event.stopPropagation()"
+		></textarea>
+	</mat-form-field>
 
 	<div class="vertical-spacer"></div>
-	LOCATION HERE
+
+	TIMESTAMP HERE<br/>
+	<!--<mat-form-field  class="full-width">-->
+		<!--<input-->
+			<!--type="text"-->
+			<!--matInput-->
+			<!--(change)="onTimestampChange($event)"-->
+		<!--/>-->
+	<!--</mat-form-field>-->
 
 	<div class="vertical-spacer"></div>
-	DATE HERE
+
+	LOCATION HERE<br/>
+	<!--<mat-form-field  class="full-width">-->
+		<!--<input-->
+			<!--type="text"-->
+			<!--matInput-->
+			<!--(change)="onTimestampChange($event)"-->
+		<!--/>-->
+	<!--</mat-form-field>-->
 </form>

@@ -4,5 +4,12 @@ interface Entry {
 }
 interface EntryData {
 	name: string,
-	tags: string[]
+	tags: string[],
+	note: string,
+	// timestamp: number,
+	// location: LatLong
+}
+interface LatLong {
+	latitude: number,
+	longitude: number
 }

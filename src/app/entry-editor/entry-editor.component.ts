@@ -3,6 +3,7 @@ import {TagsComponent} from "../tags/tags.component";
 import {debounceTime} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {AutocompleteComponent} from "../autocomplete/autocomplete.component";
+import {FormControl} from "@angular/forms";
 
 @Component({
 	selector: 'app-entry-editor',
@@ -11,6 +12,7 @@ import {AutocompleteComponent} from "../autocomplete/autocomplete.component";
 })
 export class EntryEditorComponent implements OnInit {
 	private entryData: EntryData = EntryEditorComponent.buildBlankEntryData();
+	noteCtrl = new FormControl();
 	guess = {
 		names: [],
 		tags: []
@@ -50,6 +52,18 @@ export class EntryEditorComponent implements OnInit {
 		this.update({tags});
 	}
 
+	onNoteChange(note) {
+		this.update({note});
+	}
+
+	// onTimestampChange(date) {
+	// 	console.log('//TODO: handle onDateChange(). date: ', date);
+	// }
+	//
+	// onLocationChange(location) {
+	// 	console.log('//TODO: handle onLocationChange(). location: ', location);
+	// }
+
 	clear() {
 		this.update(EntryEditorComponent.buildBlankEntryData());
 	}
@@ -62,13 +76,20 @@ export class EntryEditorComponent implements OnInit {
 		Object.assign(this.entryData, data);
 		this.nameComp.set(this.entryData.name);
 		this.tagsComp.set(this.entryData.tags);
+		this.noteCtrl.setValue(this.entryData.note);
 		this.changeEvent.next();
 	}
 
 	static buildBlankEntryData(): EntryData {
 		return {
 			name: '',
-			tags: []
+			tags: [],
+			note: '',
+			// timestamp: 0,
+			// location: {
+			// 	latitude: 0,
+			// 	longitude: 0
+			// }
 		};
 	}
 }
