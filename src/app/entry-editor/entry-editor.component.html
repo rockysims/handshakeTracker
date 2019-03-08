@@ -10,7 +10,7 @@
 		(change)="onTagsChange($event)"
 	></app-tags>
 
-	<mat-form-field  class="full-width">
+	<mat-form-field class="full-width">
 		<textarea
 			matInput
 			placeholder="Notes"
@@ -19,16 +19,19 @@
 		></textarea>
 	</mat-form-field>
 
-	<div class="vertical-spacer"></div>
-
-	TIMESTAMP HERE<br/>
-	<!--<mat-form-field  class="full-width">-->
-		<!--<input-->
-			<!--type="text"-->
-			<!--matInput-->
-			<!--(change)="onTimestampChange($event)"-->
-		<!--/>-->
-	<!--</mat-form-field>-->
+	<mat-form-field class="full-width">
+		<input
+			matInput
+			name="date"
+			placeholder="Date"
+			[matDatepicker]="picker"
+			[(ngModel)]="dateMoment"
+			(change)="$event.stopPropagation()"
+			(dateChange)="($event.value)?onDateChange($event.value):null;"
+		/>
+		<mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+		<mat-datepicker [touchUi]="true" #picker></mat-datepicker>
+	</mat-form-field>
 
 	<div class="vertical-spacer"></div>
 

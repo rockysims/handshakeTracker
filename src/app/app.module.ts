@@ -11,7 +11,9 @@ import {
 	MatInputModule,
 	MatChipsModule,
 	MatIconModule,
+	MatDatepickerModule,
 } from "@angular/material";
+import { MatMomentDateModule } from "@angular/material-moment-adapter";
 import {
 	FormsModule,
 	ReactiveFormsModule
@@ -32,7 +34,7 @@ import { EntryComponent } from './entry/entry.component';
 import { EntryViewComponent } from './entry-view/entry-view.component';
 import { AutocompleteComponent } from './autocomplete/autocomplete.component';
 import { LoginComponent } from './login/login.component';
-import {LoginRouteGuard} from "./login-route.guard";
+import { LoginRouteGuard } from "./login-route.guard";
 import { SandboxComponent } from './sandbox/sandbox.component';
 
 const FIREBASE_IMPORTS = [
@@ -76,6 +78,8 @@ const FORMS_IMPORTS = [
 		BrowserModule,
 		AppRoutingModule,
 		BrowserAnimationsModule,
+		MatDatepickerModule,
+		MatMomentDateModule,
 		...FIREBASE_IMPORTS,
 		...MATERIAL_IMPORTS,
 		...FORMS_IMPORTS,

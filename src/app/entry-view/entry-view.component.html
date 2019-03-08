@@ -11,6 +11,7 @@
 		notes:<br/>
 		{{entry.data.note}}
 	</div>
+	<div>date: {{moment.unix(entry.data.unixTimestamp).format('MM/DD/YYYY')}}</div>
 	<div>
 		<button (click)="delete(entry)" class="mat-raised-button mat-mini-fab"><i class="fas fa-trash"></i></button>
 	</div>

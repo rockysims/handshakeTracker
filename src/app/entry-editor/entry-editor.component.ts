@@ -4,6 +4,8 @@ import {debounceTime} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {AutocompleteComponent} from "../autocomplete/autocomplete.component";
 import {FormControl} from "@angular/forms";
+import {Moment} from "moment";
+import * as moment from "moment";
 
 @Component({
 	selector: 'app-entry-editor',
@@ -11,8 +13,9 @@ import {FormControl} from "@angular/forms";
 	styleUrls: ['./entry-editor.component.less']
 })
 export class EntryEditorComponent implements OnInit {
-	private entryData: EntryData = EntryEditorComponent.buildBlankEntryData();
+	private entryData: EntryData = EntryEditorComponent.buildFreshEntryData();
 	noteCtrl = new FormControl();
+	dateMoment: Moment;
 	guess = {
 		names: [],
 		tags: []
@@ -56,16 +59,18 @@ export class EntryEditorComponent implements OnInit {
 		this.update({note});
 	}
 
-	// onTimestampChange(date) {
-	// 	console.log('//TODO: handle onDateChange(). date: ', date);
-	// }
-	//
+	onDateChange(dateMoment: Moment) {
+		this.update({
+			unixTimestamp: dateMoment.unix()
+		});
+	}
+
 	// onLocationChange(location) {
 	// 	console.log('//TODO: handle onLocationChange(). location: ', location);
 	// }
 
 	clear() {
-		this.update(EntryEditorComponent.buildBlankEntryData());
+		this.update(EntryEditorComponent.buildFreshEntryData());
 	}
 
 	get data() {
@@ -77,15 +82,16 @@ export class EntryEditorComponent implements OnInit {
 		this.nameComp.set(this.entryData.name);
 		this.tagsComp.set(this.entryData.tags);
 		this.noteCtrl.setValue(this.entryData.note);
+		this.dateMoment = moment.unix(this.entryData.unixTimestamp);
 		this.changeEvent.next();
 	}
 
-	static buildBlankEntryData(): EntryData {
+	static buildFreshEntryData(): EntryData {
 		return {
 			name: '',
 			tags: [],
 			note: '',
-			// timestamp: 0,
+			unixTimestamp: moment().startOf('day').unix(),
 			// location: {
 			// 	latitude: 0,
 			// 	longitude: 0

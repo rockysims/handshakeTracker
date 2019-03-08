@@ -6,7 +6,7 @@ interface EntryData {
 	name: string,
 	tags: string[],
 	note: string,
-	// timestamp: number,
+	unixTimestamp: number,
 	// location: LatLong
 }
 interface LatLong {
