@@ -54,10 +54,16 @@ export class AutocompleteComponent implements OnInit {
 		this.ctrl.setValue(inputText);
 	}
 
-	focusAndOpen() {
-		window.setTimeout(() => {
-			this.inputElem.nativeElement.focus();
+	focus(): Promise<void> {
+		return new Promise(resolve => {
+			window.setTimeout(() => {
+				this.inputElem.nativeElement.focus();
+				resolve();
+			});
 		});
-		this.autocomplete.openPanel();
+	}
+
+	close() {
+		this.autocomplete.closePanel();
 	}
 }

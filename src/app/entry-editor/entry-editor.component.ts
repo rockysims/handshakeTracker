@@ -38,7 +38,13 @@ export class EntryEditorComponent implements OnInit {
 			if (entryData) this.update(entryData);
 
 			const nameExactMatch = this.guess.names.includes(this.entryData.name);
-			if (!nameExactMatch) this.nameComp.focusAndOpen();
+			if (!nameExactMatch) {
+				this.nameComp.focus().then(() => {
+					if (this.entryData.name.length === 0) {
+						this.nameComp.close();
+					}
+				});
+			}
 
 			//emit change events (with debounce)
 			this.changeEvent.pipe(
