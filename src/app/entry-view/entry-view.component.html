@@ -1,17 +1,23 @@
 <div>
-	<div>id: {{entry.id}}</div>
-	<div>name: {{entry.data.name}}</div>
-	<div style="min-height: 30px;">
-		tags:
-		<mat-chip-list>
-			<mat-chip *ngFor="let tag of entry.data.tags">{{tag}}</mat-chip>
-		</mat-chip-list>
-	</div>
+	<div><u>id</u>: {{entry.id}}</div>
+	<div><u>name</u>: {{entry.data.name}}</div>
+
+
+	<!--<div style="min-height: 30px;">-->
 	<div>
-		notes:<br/>
+		<u>tags</u>:
+		{{entry.data.tags.join(', ')}}
+		<!--<mat-chip-list>-->
+			<!--<mat-chip *ngFor="let tag of entry.data.tags">{{tag}}</mat-chip>-->
+		<!--</mat-chip-list>-->
+	</div>
+
+
+	<div>
+		<u>notes</u>:
 		{{entry.data.note}}
 	</div>
-	<div>date: {{moment.unix(entry.data.unixTimestamp).format('MM/DD/YYYY')}}</div>
+	<div><u>date</u>: {{moment.unix(entry.data.unixTimestamp).format('MM/DD/YYYY')}}</div>
 	<div>
 		<button (click)="delete(entry)" class="mat-raised-button mat-mini-fab"><i class="fas fa-trash"></i></button>
 	</div>
