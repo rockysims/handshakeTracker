@@ -1,4 +1,35 @@
-// import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
+
+admin.initializeApp(functions.config().firebase);
+
+const entryDoc = functions.firestore.document('/users/{userId}/entries/{entryId}');
+exports.onEntryCreate = entryDoc.onCreate((snap, context) => {
+	return snap.ref.update({
+		algoliaDirty: true
+	});
+});
+exports.onEntryUpdate = entryDoc.onUpdate((change, context) => {
+	return change.after!.ref.update({
+		algoliaDirty: true
+	});
+});
+exports.onEntryDelete = entryDoc.onDelete((snap, context) => {
+	const userId = context.params.userId;
+	const entryId = context.params.entryId;
+	return admin.firestore()
+		.collection(`/users/${userId}/deletedEntryIds`)
+		.doc(entryId)
+		.set({});
+});
+
+
+
+
+
+
+
+
 // import * as algoliasearch from 'algoliasearch';
 //
 // const algoliaClient = algoliasearch(
