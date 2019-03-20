@@ -1,6 +1,8 @@
 import {Component} from "@angular/core";
 import {AngularFirestore} from "@angular/fire/firestore";
-import {Observable} from "rxjs";
+import {EndpointService} from "./endpoint.service";
+import {UserService} from "./user.service";
+import {HttpClient} from "@angular/common/http";
 
 @Component({
 	selector: "app-root",
@@ -8,13 +10,26 @@ import {Observable} from "rxjs";
 	styleUrls: ["./app.component.less"]
 })
 export class AppComponent {
-	title = "handshakeTracker";
-
-	items: Observable<any[]>;
-
 	constructor(
-		public db: AngularFirestore
+		db: AngularFirestore,
+		endpointService: EndpointService,
+		userService: UserService,
+		http: HttpClient
 	) {
-		this.items = db.collection("items").valueChanges();
+		let latestChangeSub = null;
+		userService.userUid$().subscribe(userUid => {
+			if (latestChangeSub) latestChangeSub.unsubscribe();
+			if (userUid) {
+				latestChangeSub = db.doc(endpointService.latestChange()).valueChanges().subscribe(() => {
+					http.get(`https://handshake-tracker-algolia.herokuapp.com/update-algolia-index-for/${userUid}`).toPromise()
+						.then(() => {
+							console.log('algolia indexing succeeded'); //TODO: delete this line?
+						}, (errors: string[]) => {
+							console.log('algolia indexing failed because: ', errors);
+						});
+					console.log('latest change updated'); //TODO: delete this line
+				});
+			}
+		});
 	}
 }
