@@ -39,11 +39,11 @@ exports.onEntryUpdate = entryDoc.onUpdate((change, context) => {
 			lastChangeTimestamp,
 			lastChangeGreaterThanLastIndex
 		}).then(() => {
-			if (reallyChanged) {
-				return updateOverallLatestChangeTimestamp(context.params.userId);
-			} else return;
+			return (reallyChanged)
+				? updateOverallLatestChangeTimestamp(context.params.userId)
+				: null;
 		});
-	} else return;
+	} else return null;
 });
 exports.onEntryDelete = entryDoc.onDelete((snap, context) => {
 	const userId = context.params.userId;
@@ -60,5 +60,5 @@ exports.onEntryDelete = entryDoc.onDelete((snap, context) => {
 function updateOverallLatestChangeTimestamp(userId: string) {
 	return admin.firestore().collection(`/users/${userId}/latest`).doc('change').set({
 		timestamp: Date.now()
-	}).then(() => {});
+	}).then(() => null);
 }
