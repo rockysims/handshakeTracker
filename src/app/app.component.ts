@@ -16,17 +16,32 @@ export class AppComponent {
 		userService: UserService,
 		http: HttpClient
 	) {
+		let updateQueued = false;
+		let updateInProgress = false;
 		let latestChangeSub = null;
 		userService.userUid$().subscribe(userUid => {
 			if (latestChangeSub) latestChangeSub.unsubscribe();
 			if (userUid) {
-				latestChangeSub = db.doc(endpointService.latestChange()).valueChanges().subscribe(() => {
-					http.get(`https://handshake-tracker-algolia.herokuapp.com/update-algolia-index-for/${userUid}`).toPromise()
+				const updateAlgoliaIndex = () => {
+					updateInProgress = true;
+					http.get(`https://handshake-tracker-algolia.herokuapp.com/update-algolia-index-for/${userUid}`)
+						.toPromise()
 						.then(() => {
 							console.log('algolia indexing succeeded'); //TODO: delete this line?
 						}, (errors: string[]) => {
 							console.log('algolia indexing failed because: ', errors);
+						}).finally(() => {
+							updateInProgress = false;
+							if (updateQueued) {
+								updateQueued = false;
+								updateAlgoliaIndex();
+							}
 						});
+				};
+
+				latestChangeSub = db.doc(endpointService.latestChange()).valueChanges().subscribe(() => {
+					if (updateInProgress) updateQueued = true;
+					else updateAlgoliaIndex();
 					console.log('latest change updated'); //TODO: delete this line
 				});
 			}

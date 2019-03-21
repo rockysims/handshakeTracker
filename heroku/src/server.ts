@@ -5,6 +5,11 @@ import express from 'express';
 const app = express();
 const port = process.env.PORT || 8080;
 
+app.use(function(req, res, next) {
+	res.setHeader('Access-Control-Allow-Origin', '*');
+	next();
+});
+
 app.get('/', (req, res) => {
 	res.send('working');
 });
@@ -40,13 +45,15 @@ const algoliaClient = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGO
 
 app.get('/update-algolia-index-for/:userId', (req, res) => {
 	const userId = req.params.userId;
+	const allOutputs: string[] = [];
 	const allErrors: string[] = [];
 
 	//update stale entries
 	const staleEntriesRef = admin.firestore().collection(`users/${userId}/entries`)
-		.where('lastChangeTimestamp', '>', 'lastIndexTimestamp');
+		.where('lastChangeGreaterThanLastIndex', '==', true); //lastChangeTimestamp > lastIndexTimestamp
 	const stalePromise: Promise<void> = staleEntriesRef.get()
 		.then(snap => {
+			allOutputs.push('staleEntries: ' + snap.docs.length);
 			if (!snap.empty) {
 				const algoliaPromises: Promise<void>[] = [];
 				const batch = admin.firestore().batch();
@@ -56,6 +63,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 						objectID: doc.id,
 						...doc.data()
 					};
+					delete entry['lastChangeGreaterThanLastIndex'];
 					delete entry['lastChangeTimestamp'];
 					delete entry['lastIndexTimestamp'];
 
@@ -69,6 +77,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 				});
 
 				return Promise.all(algoliaPromises).then(() => {
+					allOutputs.push('stale batch.commit() called');
 					return batch.commit()
 						.then(() => {})
 						.catch(reason => {
@@ -82,6 +91,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 	const deletedEntryIdsRef = admin.firestore().collection(`users/${userId}/deletedEntryIds`);
 	const deletePromise: Promise<void> = deletedEntryIdsRef.get()
 		.then(snap => {
+			allOutputs.push('deletedEntry: ' + snap.docs.length);
 			if (!snap.empty) {
 				const algoliaPromises: Promise<void>[] = [];
 				const batch = admin.firestore().batch();
@@ -97,6 +107,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 				});
 
 				return Promise.all(algoliaPromises).then(() => {
+					allOutputs.push('deleted batch.commit() called');
 					return batch.commit()
 						.then(() => {})
 						.catch(reason => {
@@ -108,9 +119,15 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 
 	Promise.all([stalePromise, deletePromise] as Promise<void>[]).then(() => {
 		if (allErrors.length > 0) {
-			res.status(500).json(allErrors);
+			res.status(500).json({
+				allOutputs,
+				allErrors
+			});
 		} else {
-			res.send('success');
+			res.json({
+				allOutputs,
+				allErrors
+			});
 		}
 	});
 });

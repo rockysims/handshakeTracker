@@ -36,6 +36,7 @@ import { AutocompleteComponent } from './autocomplete/autocomplete.component';
 import { LoginComponent } from './login/login.component';
 import { LoginRouteGuard } from "./login-route.guard";
 import { SandboxComponent } from './sandbox/sandbox.component';
+import { HttpClientModule } from "@angular/common/http";
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -80,6 +81,7 @@ const FORMS_IMPORTS = [
 		BrowserAnimationsModule,
 		MatDatepickerModule,
 		MatMomentDateModule,
+		HttpClientModule,
 		...FIREBASE_IMPORTS,
 		...MATERIAL_IMPORTS,
 		...FORMS_IMPORTS,
