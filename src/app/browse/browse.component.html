@@ -1,3 +1,13 @@
+<div>
+	<mat-form-field class="full-width">
+		<input
+			matInput
+			name="search"
+			placeholder="[algoliaIconHere] Search"
+			[formControl]="searchTextCtrl"
+		/>
+	</mat-form-field>
+</div>
 <div *ngFor="let entry of entries$ | async">
 	<app-entry [entry]="entry"></app-entry>
 </div>

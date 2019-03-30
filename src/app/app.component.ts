@@ -27,7 +27,7 @@ export class AppComponent {
 					http.get(`https://handshake-tracker-algolia.herokuapp.com/update-algolia-index-for/${userUid}`)
 						.toPromise()
 						.then(() => {
-							console.log('algolia indexing succeeded'); //TODO: delete this line?
+							console.log('algolia indexing via heroku succeeded'); //TODO: delete this line?
 						}, (errors: string[]) => {
 							console.log('algolia indexing failed because: ', errors);
 						}).finally(() => {
