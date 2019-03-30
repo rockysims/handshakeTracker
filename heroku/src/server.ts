@@ -14,24 +14,6 @@ app.get('/', (req, res) => {
 	res.send('working');
 });
 
-// app.get('/algolia', (req, res) => {
-// 	const client = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_ADMIN_API_KEY);
-// 	const index = client.initIndex('test_index_name');
-// 	const testJson = {
-// 		objectID: 42,
-// 		name: 'testJsonName'
-// 	};
-//
-// 	index.addObject(testJson, function(err, content) {
-// 		if (err) console.error(err);
-// 		console.log('addObject() done');
-// 		res.write('addObject() done');
-// 		res.end();
-// 	});
-//
-// 	res.write('Hello world from typescript express!');
-// });
-
 admin.initializeApp({
 	credential: admin.credential.cert({
 		projectId: process.env.FIREBASE_PROJECT_ID,
@@ -47,6 +29,8 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 	const userId = req.params.userId;
 	const allOutputs: string[] = [];
 	const allErrors: string[] = [];
+	let staleCount = 0;
+	let deleteCount = 0;
 
 	//update stale entries
 	const staleEntriesRef = admin.firestore().collection(`users/${userId}/entries`)
@@ -61,16 +45,20 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 				snap.forEach(doc => {
 					const entry: any = {
 						objectID: doc.id,
-						...doc.data()
+						id: doc.id,
+						data: doc.data()
 					};
 					delete entry['lastChangeGreaterThanLastIndex'];
 					delete entry['lastChangeTimestamp'];
 					delete entry['lastIndexTimestamp'];
 
 					algoliaPromises.push(new Promise(resolve => {
-						entriesIndex.addObject(entry, function(err, content) {
+						entriesIndex.saveObject(entry, function(err, content) {
 							if (err) allErrors.push('entriesIndex.addObject() failed with err: ' + err);
-							else batch.update(doc.ref, {lastIndexTimestamp: doc.data().lastChangeTimestamp});
+							else {
+								batch.update(doc.ref, {lastIndexTimestamp: doc.data().lastChangeTimestamp});
+								staleCount++;
+							}
 							resolve();
 						});
 					}));
@@ -100,7 +88,10 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 					algoliaPromises.push(new Promise(resolve => {
 						entriesIndex.deleteObject(doc.id, function(err, content) {
 							if (err) allErrors.push('entriesIndex.deleteObject() failed with err: ' + err);
-							else batch.delete(doc.ref);
+							else {
+								batch.delete(doc.ref);
+								deleteCount++;
+							}
 							resolve();
 						});
 					}));
@@ -118,6 +109,49 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 		});
 
 	Promise.all([stalePromise, deletePromise] as Promise<void>[]).then(() => {
+		function waitForActualAlgoliaUpdate(): Promise<void> {
+			//update latest timestamp in algolia
+			const latestTimestamp = Date.now();
+			const latestIndex = algoliaClient.initIndex('latest');
+			const updateLatestTimestampPromise = latestIndex.saveObject({
+				objectID: 'timestamp',
+				value: latestTimestamp
+			});
+
+			//poll algolia until latest timestamp actually updates
+			return updateLatestTimestampPromise.then(() => {
+				return new Promise<void>((resolve, reject) => {
+					let pollingLimit = 10;
+					pollAlgolia();
+					function pollAlgolia() {
+						if (pollingLimit-- > 0) {
+							latestIndex.clearCache();
+							latestIndex.search('').then(results => {
+								const hit = results.hits[0];
+								const algoliaActuallyUpdated = hit && hit.value >= latestTimestamp;
+								console.log('algoliaActuallyUpdated: ', algoliaActuallyUpdated); //TODO: delete this line
+								if (algoliaActuallyUpdated) resolve();
+								else setTimeout(pollAlgolia, 500);
+							}, reject);
+						} else reject('Polling limit exhausted.');
+					}
+				});
+			});
+		}
+
+		if (staleCount + deleteCount > 0) {
+			waitForActualAlgoliaUpdate().then(() => {
+				admin.firestore().doc(`users/${userId}/latest/index`).set({
+					timestamp: Date.now()
+				});
+			}, reason => {
+				const errMsg = `waitForActualAlgoliaUpdate() failed because: ${reason}`;
+				console.error(errMsg);
+				allErrors.push(errMsg);
+			});
+		}
+		else console.log('staleCount + deleteCount not > 0'); //TODO: delete this line
+
 		if (allErrors.length > 0) {
 			res.status(500).json({
 				allOutputs,
@@ -131,21 +165,6 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 		}
 	});
 });
-
-// app.get('/fire', (req, res) => {
-// 	res.write('Started /fire handler<br/>');
-//
-// 	admin.firestore().collection('heroku').doc('fire').set({
-// 		worked: true,
-// 		now: Date.now()
-// 	}).then(() => {
-// 		res.write('success write to firebase<br/>');
-// 	}, () => {
-// 		res.write('failed write to firebase<br/>');
-// 	}).finally(() => {
-// 		res.end();
-// 	});
-// });
 
 app.listen(port);
 
