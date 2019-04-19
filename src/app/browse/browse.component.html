@@ -9,7 +9,10 @@
 	</mat-form-field>
 </div>
 <div *ngFor="let entry of entries$ | async">
-	<app-entry [entry]="entry"></app-entry>
+	<app-entry-view
+		[entry]="entry"
+		(delete)="onDelete($event)"
+	></app-entry-view>
 </div>
 <div *ngIf="(entries$ | async)?.length === 0">
 	No entries found.

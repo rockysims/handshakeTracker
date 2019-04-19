@@ -18,10 +18,11 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	private entriesIndex: Index;
 	entries$ = new Subject<Entry[]>();
 	searchTextCtrl = new FormControl();
+	recentlyDeletedEntryIds = [];
 
 	constructor(
-		db: AngularFirestore,
-		endpointService: EndpointService
+		private db: AngularFirestore,
+		private endpointService: EndpointService
 	) {
 		this.entriesIndex = algoliasearch(environment.algolia.appId, environment.algolia.searchKey)
 			.initIndex('entries');
@@ -29,24 +30,14 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		db.doc(endpointService.latestIndex()).valueChanges().pipe(
 			takeUntil(this.ngUnsubscribe)
 		).subscribe(() => {
-			console.log('latest index updated');
-			setTimeout(() => {
-				this.entriesIndex.clearCache();
-				this.updateSearchResults();
-			}, 0);
+			//update search results (since algolia's index was updated)
+			console.log('algolia index was updated');
+			this.entriesIndex.clearCache();
+			this.updateSearchResults();
 		});
 	}
 
 	ngOnInit() {
-
-		//TODO: instead of showing results from algolia, get ids from algolia then query firebase
-		//	this is mostly to allow optimistic updating/deleting of firebase documents to work
-		//	can still rerun search (if algolia index changes after search but while still viewing results)
-		//			ALTERNATIVE: just show most recent entries until user types in search (no auto rerun of search)
-		//		add any entries missing from original search
-		//		delete any entries not in new search (provided user is not editing it?)
-		//			make editing an entry it's own page (redirect back to Browse page (remember search) when done)
-
 		this.updateSearchResults();
 		this.searchTextCtrl.valueChanges.pipe(
 			debounceTime(500)
@@ -59,13 +50,25 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	}
 
 	updateSearchResults() {
-		const searchText = this.searchTextCtrl.value;
+		const searchText = this.searchTextCtrl.value || '';
+		const searchFilter = this.recentlyDeletedEntryIds.map(id => {
+			return `NOT objectID:${id}`;
+		}).join(' AND ');
 
 		const self = this;
-		this.entriesIndex.search(searchText).then(results => {
+		this.entriesIndex.search({
+			query: searchText,
+			filters: searchFilter
+		}).then(results => {
 			self.entries$.next(results.hits);
 		}, err => {
 			console.error(err);
 		}).finally(() => console.log('searched'));
 	}
+
+	onDelete(entry) {
+		this.recentlyDeletedEntryIds.push(entry.id);
+		this.updateSearchResults();
+	}
 }
+
