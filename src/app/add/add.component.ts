@@ -10,33 +10,11 @@ import {EndpointService} from "../endpoint.service";
 	styleUrls: ['./add.component.less']
 })
 export class AddComponent implements OnInit {
-	private entryDraftDoc: AngularFirestoreDocument<EntryData>;
-	entryDataPromise: Promise<EntryData>;
-	isLoading = true; //TODO: use in view to disable fields until loaded
-
 	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 
-	constructor(private afs: AngularFirestore,
-				private entryService: EntryService,
-				private endpointService: EndpointService) {
-		this.entryDraftDoc = this.afs.doc(this.endpointService.entryDraft());
-		this.entryDataPromise = this.entryDraftDoc.get().toPromise()
-			.then(doc => (doc.exists)
-				? doc.data() as EntryData
-				: null
-			);
-	}
+	constructor(private entryService: EntryService) {}
 
-	ngOnInit() {
-		this.entryDataPromise.then(() => {
-			this.isLoading = false;
-		});
-	}
-
-	onChange(entryData: EntryData) {
-		console.log('saving draft: ', entryData);
-		this.entryDraftDoc.set(entryData);
-	}
+	ngOnInit() {}
 
 	clear() {
 		this.entryEditor.clear();

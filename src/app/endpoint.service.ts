@@ -9,7 +9,6 @@ export class EndpointService {
 
 	entries = () => this.build('entries');
 	entry = (entryId: string) => this.build(`entries/${entryId}`);
-	entryDraft = () => this.build('persist/entryDraft');
 	latestChange = () => this.build('latest/change');
 	latestIndex = () => this.build('latest/index');
 
