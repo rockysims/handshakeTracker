@@ -6,14 +6,8 @@ import {Component, OnInit} from '@angular/core';
 	styleUrls: ['./sandbox.component.less']
 })
 export class SandboxComponent implements OnInit {
-	guess = {
-		names: ['Alice', 'Angela', 'Bob', 'Bill']
-	};
-
 	constructor() {}
 
-	ngOnInit() {
-
-	}
+	ngOnInit() {}
 
 }

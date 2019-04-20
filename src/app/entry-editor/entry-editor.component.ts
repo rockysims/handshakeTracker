@@ -6,6 +6,8 @@ import {AutocompleteComponent} from "../autocomplete/autocomplete.component";
 import {FormControl} from "@angular/forms";
 import {Moment} from "moment";
 import * as moment from "moment";
+import {GeoService} from "../geo.service";
+import {MapComponent} from "../map/map.component";
 
 @Component({
 	selector: 'app-entry-editor',
@@ -13,29 +15,39 @@ import * as moment from "moment";
 	styleUrls: ['./entry-editor.component.less']
 })
 export class EntryEditorComponent implements OnInit {
-	private entryData: EntryData = EntryEditorComponent.buildFreshEntryData();
+	private entryData: EntryData = EntryEditorComponent.buildFreshEntryData(this.geoService.getDefaultLocation());
+	private locationOrDefaultPromise: Promise<LatLong> = this.geoService.getLocationOrDefault();
 	noteCtrl = new FormControl();
 	dateMoment: Moment;
 	guess = {
 		names: [],
 		tags: []
 	};
+	isLoading = true;
 
 	@ViewChild(AutocompleteComponent) private nameComp: AutocompleteComponent;
 	@ViewChild(TagsComponent) private tagsComp: TagsComponent;
+	@ViewChild(MapComponent) private mapComp: MapComponent;
 	@Input() private entryDataOrPromise: EntryData|Promise<EntryData>;
 	private changeEvent = new Subject();
 	@Output() private change = new EventEmitter<EntryData>();
 
-	constructor() {}
+	constructor(private geoService: GeoService) {}
 
 	ngOnInit() {
+		const loadPromises = [];
+
 		//TODO: load guesses dynamically
 		this.guess.names = ['Yona', 'Rocky', 'Yoda', 'Ronny'];
 		this.guess.tags = ['Apple', 'Lemon', 'Lime', 'Mango', 'Strawberry'];
 
-		Promise.resolve(this.entryDataOrPromise).then(entryData => {
+		loadPromises.push(Promise.resolve(this.entryDataOrPromise).then(entryData => {
 			if (entryData) this.update(entryData);
+			else {
+				this.locationOrDefaultPromise.then(loc => {
+					this.update(EntryEditorComponent.buildFreshEntryData(loc));
+				});
+			}
 
 			const nameExactMatch = this.guess.names.includes(this.entryData.name);
 			if (!nameExactMatch) {
@@ -50,7 +62,9 @@ export class EntryEditorComponent implements OnInit {
 			this.changeEvent.pipe(
 				debounceTime(500)
 			).subscribe(() => this.change.emit(this.entryData));
-		});
+		}));
+
+		Promise.all(loadPromises).finally(() => this.isLoading = false);
 	}
 
 	onNameChange(name) {
@@ -71,37 +85,44 @@ export class EntryEditorComponent implements OnInit {
 		});
 	}
 
-	// onLocationChange(location) {
-	// 	console.log('//TODO: handle onLocationChange(). location: ', location);
-	// }
-
-	clear() {
-		this.update(EntryEditorComponent.buildFreshEntryData());
+	onLocationChange(location: LatLong) {
+		console.log('onLocationChange: ', location); //TODO: delete this line
+		this.update({location}, true);
 	}
 
-	get data() {
+	async clear() {
+		this.update(EntryEditorComponent.buildFreshEntryData(await this.locationOrDefaultPromise));
+	}
+
+	get data(): EntryData {
 		return this.entryData;
 	}
 
-	private update(data) {
+	private ignoreUpdates = false;
+	private update(data, suppressDisplayUpdates = false) {
+		if (this.ignoreUpdates) return;
+		this.ignoreUpdates = true;
+
 		Object.assign(this.entryData, data);
-		this.nameComp.set(this.entryData.name);
-		this.tagsComp.set(this.entryData.tags);
-		this.noteCtrl.setValue(this.entryData.note);
-		this.dateMoment = moment.unix(this.entryData.unixTimestamp);
+		if (!suppressDisplayUpdates) {
+			this.nameComp.set(this.entryData.name);
+			this.tagsComp.set(this.entryData.tags);
+			this.noteCtrl.setValue(this.entryData.note);
+			this.dateMoment = moment.unix(this.entryData.unixTimestamp);
+			this.mapComp.set(this.entryData.location);
+		}
 		this.changeEvent.next();
+
+		this.ignoreUpdates = false;
 	}
 
-	static buildFreshEntryData(): EntryData {
+	static buildFreshEntryData(loc: LatLong): EntryData {
 		return {
 			name: '',
 			tags: [],
 			note: '',
 			unixTimestamp: moment().startOf('day').unix(),
-			// location: {
-			// 	latitude: 0,
-			// 	longitude: 0
-			// }
+			location: loc
 		};
 	}
 }

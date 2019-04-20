@@ -1,46 +1,45 @@
-<form>
-	<app-autocomplete
-		[optionsOrPromise]="guess.names"
-		[placeholder]="'Name'"
-		(change)="onNameChange($event)"
-	></app-autocomplete>
+<div *ngIf="isLoading; else loadedBlock">
+	Loading...
+</div>
+<ng-template #loadedBlock>
+	<form>
+		<app-autocomplete
+			[optionsOrPromise]="guess.names"
+			[placeholder]="'Name'"
+			(change)="onNameChange($event)"
+		></app-autocomplete>
 
-	<app-tags
-		[knownTagsOrPromise]="guess.tags"
-		(change)="onTagsChange($event)"
-	></app-tags>
+		<app-tags
+			[knownTagsOrPromise]="guess.tags"
+			(change)="onTagsChange($event)"
+		></app-tags>
 
-	<mat-form-field class="full-width">
+		<mat-form-field class="full-width">
 		<textarea
 			matInput
 			placeholder="Notes"
 			[formControl]="noteCtrl"
 			(change)="onNoteChange($event.target.value); $event.stopPropagation()"
 		></textarea>
-	</mat-form-field>
+		</mat-form-field>
 
-	<mat-form-field class="full-width">
-		<input
-			matInput
-			name="date"
-			placeholder="Date"
-			[matDatepicker]="picker"
-			[(ngModel)]="dateMoment"
-			(change)="$event.stopPropagation()"
-			(dateChange)="($event.value)?onDateChange($event.value):null;"
-		/>
-		<mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-		<mat-datepicker [touchUi]="true" #picker></mat-datepicker>
-	</mat-form-field>
+		<mat-form-field class="full-width">
+			<input
+				matInput
+				name="date"
+				placeholder="Date"
+				[matDatepicker]="picker"
+				[(ngModel)]="dateMoment"
+				(change)="$event.stopPropagation()"
+				(dateChange)="($event.value)?onDateChange($event.value):null;"
+			/>
+			<mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+			<mat-datepicker [touchUi]="true" #picker></mat-datepicker>
+		</mat-form-field>
 
-	<div class="vertical-spacer"></div>
+		<div class="vertical-spacer"></div>
 
-	LOCATION HERE<br/>
-	<!--<mat-form-field  class="full-width">-->
-		<!--<input-->
-			<!--type="text"-->
-			<!--matInput-->
-			<!--(change)="onTimestampChange($event)"-->
-		<!--/>-->
-	<!--</mat-form-field>-->
-</form>
+		Location:<br/>
+		<app-map (markerChange)="onLocationChange($event)"></app-map>
+	</form>
+</ng-template>

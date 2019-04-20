@@ -36,6 +36,7 @@ import { AutocompleteComponent } from './autocomplete/autocomplete.component';
 import { LoginComponent } from './login/login.component';
 import { LoginRouteGuard } from "./login-route.guard";
 import { SandboxComponent } from './sandbox/sandbox.component';
+import { MapComponent } from './map/map.component';
 import { HttpClientModule } from "@angular/common/http";
 
 const FIREBASE_IMPORTS = [
@@ -74,6 +75,7 @@ const FORMS_IMPORTS = [
 		AutocompleteComponent,
 		LoginComponent,
 		SandboxComponent,
+		MapComponent,
 	],
 	imports: [
 		BrowserModule,
