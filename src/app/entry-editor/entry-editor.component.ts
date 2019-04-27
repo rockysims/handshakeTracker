@@ -7,7 +7,7 @@ import {FormControl} from "@angular/forms";
 import {Moment} from "moment";
 import * as moment from "moment";
 import {GeoService} from "../geo.service";
-import {MapComponent} from "../map/map.component";
+import {MapLocationComponent} from "../map-location/map-location.component";
 
 @Component({
 	selector: 'app-entry-editor',
@@ -27,7 +27,7 @@ export class EntryEditorComponent implements OnInit {
 
 	@ViewChild(AutocompleteComponent) private nameComp: AutocompleteComponent;
 	@ViewChild(TagsComponent) private tagsComp: TagsComponent;
-	@ViewChild(MapComponent) private mapComp: MapComponent;
+	@ViewChild(MapLocationComponent) private mapComp: MapLocationComponent;
 	@Input() private entryDataOrPromise: EntryData|Promise<EntryData>;
 	private changeEvent = new Subject();
 	@Output() private change = new EventEmitter<EntryData>();

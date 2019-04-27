@@ -19,6 +19,12 @@
 	</div>
 	<div><u>date</u>: {{moment.unix(entry.data.unixTimestamp).format('MM/DD/YYYY')}}</div>
 	<div><u>location</u>:
+		<!--<app-map-location-->
+			<!--*ngIf="entry.data.location as loc"-->
+			<!--[location]="loc"-->
+			<!--[locationLocked]="true"-->
+		<!--&gt;</app-map-location>-->
+
 		<span *ngIf="entry.data.location as loc">
 			{{loc.latitude}},{{loc.longitude}}
 		</span>

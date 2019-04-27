@@ -36,8 +36,9 @@ import { AutocompleteComponent } from './autocomplete/autocomplete.component';
 import { LoginComponent } from './login/login.component';
 import { LoginRouteGuard } from "./login-route.guard";
 import { SandboxComponent } from './sandbox/sandbox.component';
-import { MapComponent } from './map/map.component';
 import { HttpClientModule } from "@angular/common/http";
+import { MapLocationComponent } from './map-location/map-location.component';
+import { MapBrowseComponent } from './map-browse/map-browse.component';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -75,7 +76,8 @@ const FORMS_IMPORTS = [
 		AutocompleteComponent,
 		LoginComponent,
 		SandboxComponent,
-		MapComponent,
+		MapLocationComponent,
+		MapBrowseComponent,
 	],
 	imports: [
 		BrowserModule,

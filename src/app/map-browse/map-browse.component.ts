@@ -11,17 +11,20 @@ import {Observable} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 
 @Component({
-	selector: 'app-map',
-	templateUrl: './map.component.html',
-	styleUrls: ['./map.component.less']
+	selector: 'app-map-browse',
+	templateUrl: './map-browse.component.html',
+	styleUrls: ['./map-browse.component.less']
 })
-export class MapComponent implements OnInit {
+export class MapBrowseComponent implements OnInit {
 	feature;
 	map;
 
-	@Output() private markerChange = new EventEmitter<LatLong>();
+	@Input() private location: LatLong;
+	@Input() private locationLocked: boolean = false;
+	@Output() private change = new EventEmitter<LatLong>();
 
-	constructor() {}
+	constructor() {
+	}
 
 	ngOnInit() {
 		const feature = new Feature(new Point([0, 0]));
@@ -34,29 +37,25 @@ export class MapComponent implements OnInit {
 		const styleCache = {};
 		const markerLayer = new VectorLayer({
 			source: markerSource,
-			style: function(feature) {
+			style: function (feature) {
 				const age = 0;
-				let style = styleCache[age];
-				if (!style) {
-					style = new Style({
-						image: new CircleStyle({
-							radius: 10,
-							stroke: new Stroke({
-								color: '#fff'
-							}),
-							fill: new Fill({
-								color: '#3399CC'
-							})
+				let style = new Style({
+					image: new CircleStyle({
+						radius: 10,
+						stroke: new Stroke({
+							color: '#fff'
 						}),
-						text: new Text({
-							text: age.toString(),
-							fill: new Fill({
-								color: '#fff'
-							})
+						fill: new Fill({
+							color: '#3399CC'
 						})
-					});
-					styleCache[age] = style;
-				}
+					}),
+					text: new Text({
+						text: age.toString(),
+						fill: new Fill({
+							color: '#fff'
+						})
+					})
+				});
 				return style;
 			}
 		});
@@ -78,20 +77,24 @@ export class MapComponent implements OnInit {
 		});
 		this.map = map;
 
-		const modify = new Modify({source: markerSource});
-		map.addInteraction(modify);
+		if (!this.locationLocked) {
+			const modify = new Modify({source: markerSource});
+			map.addInteraction(modify);
 
-		new Observable<LatLong>((observer) => {
-			feature.on('change',function() {
-				const coords = this.getGeometry().getCoordinates();
-				observer.next({
-					latitude: coords[1],
-					longitude: coords[0]
-				});
-			}, feature);
-		}).pipe(
-			debounceTime(300)
-		).subscribe(loc => this.markerChange.emit(loc));
+			new Observable<LatLong>((observer) => {
+				feature.on('change', function () {
+					const coords = this.getGeometry().getCoordinates();
+					observer.next({
+						latitude: coords[1],
+						longitude: coords[0]
+					});
+				}, feature);
+			}).pipe(
+				debounceTime(300)
+			).subscribe(loc => this.change.emit(loc));
+		}
+
+		if (this.location) this.set(this.location)
 	}
 
 	set(loc: LatLong) {
@@ -104,3 +107,6 @@ export class MapComponent implements OnInit {
 		}));
 	}
 }
+
+
+
