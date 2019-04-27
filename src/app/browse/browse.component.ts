@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import * as algoliasearch from 'algoliasearch/dist/algoliasearchLite.min.js';
 import {environment} from "../../environments/environment";
 import {FormControl} from "@angular/forms";
@@ -7,6 +7,7 @@ import {Subject} from "rxjs";
 import {Index} from "algoliasearch";
 import {AngularFirestore} from "@angular/fire/firestore";
 import {EndpointService} from "../endpoint.service";
+import {MapBrowseComponent} from "../map-browse/map-browse.component";
 
 @Component({
 	selector: 'app-browse',
@@ -19,6 +20,8 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	entries$ = new Subject<Entry[]>();
 	searchTextCtrl = new FormControl();
 	recentlyDeletedEntryIds = [];
+
+	@ViewChild(MapBrowseComponent) private mapComp: MapBrowseComponent;
 
 	constructor(
 		private db: AngularFirestore,
@@ -42,6 +45,21 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.searchTextCtrl.valueChanges.pipe(
 			debounceTime(500)
 		).subscribe(() => this.updateSearchResults());
+
+		this.db.collection(this.endpointService.entries()).ref
+			.orderBy('unixTimestamp', 'desc') //newest first
+			.limit(20)
+			.get()
+			.then(snap => {
+				const entries = snap.docs.map(docSnap => {
+					return {
+						id: docSnap.id,
+						data: docSnap.data() as EntryData
+					} as Entry
+				});
+
+				this.mapComp.set(entries);
+			});
 	}
 
 	ngOnDestroy() {
@@ -69,6 +87,10 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	onDelete(entry) {
 		this.recentlyDeletedEntryIds.push(entry.id);
 		this.updateSearchResults();
+	}
+
+	onMapSelect(entryId) {
+		console.log('onMapSelect() entryId: ', entryId);
 	}
 }
 

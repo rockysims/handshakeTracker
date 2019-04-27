@@ -9,14 +9,19 @@
 	</mat-form-field>
 </div>
 <div>
-	<!--<app-map-location-->
-	<!--&gt;</app-map-location>-->
+	<app-map-browse
+		(select)="onMapSelect($event)"
+	></app-map-browse>
 </div>
+<br/>
+<div>Results:</div>
+<br/>
 <div *ngFor="let entry of entries$ | async">
 	<app-entry-view
 		[entry]="entry"
 		(delete)="onDelete($event)"
 	></app-entry-view>
+	<br/>
 </div>
 <div *ngIf="(entries$ | async)?.length === 0">
 	No entries found.

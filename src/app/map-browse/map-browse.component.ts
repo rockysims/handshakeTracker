@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
@@ -8,57 +8,64 @@ import {OSM, Vector as VectorSource} from 'ol/source.js';
 import {Circle as CircleStyle, Fill, Stroke, Style, Text} from 'ol/style.js';
 import {Modify} from 'ol/interaction.js';
 import {Observable} from "rxjs";
-import {debounceTime} from "rxjs/operators";
+import {debounceTime, distinctUntilChanged} from "rxjs/operators";
+import {UniqueIdService} from "../unique-id.service";
 
 @Component({
 	selector: 'app-map-browse',
 	templateUrl: './map-browse.component.html',
 	styleUrls: ['./map-browse.component.less']
 })
-export class MapBrowseComponent implements OnInit {
-	feature;
+export class MapBrowseComponent implements OnInit, AfterViewInit {
+	public mapElemId: string;
+	selectedId: string|null = null;
+	vectorSource;
+	vectorLayer;
 	map;
 
-	@Input() private location: LatLong;
-	@Input() private locationLocked: boolean = false;
-	@Output() private change = new EventEmitter<LatLong>();
+	@Output() private select = new EventEmitter<string|null>();
 
-	constructor() {
+	constructor(private uniqueIdService: UniqueIdService) {
+		this.mapElemId = 'map'+uniqueIdService.next();
 	}
 
-	ngOnInit() {
-		const feature = new Feature(new Point([0, 0]));
-		this.feature = feature;
+	ngOnInit() {}
 
-		const markerSource = new VectorSource({
-			features: [feature]
+	ngAfterViewInit() {
+		const self = this;
+
+		const vectorSource = new VectorSource({
+			features: []
 		});
+		this.vectorSource = vectorSource;
 
-		const styleCache = {};
-		const markerLayer = new VectorLayer({
-			source: markerSource,
+		const vectorLayer = new VectorLayer({
+			source: vectorSource,
 			style: function (feature) {
-				const age = 0;
-				let style = new Style({
+				const selected = feature.data.id === self.selectedId;
+				// const fillColor = `hsl(0,0%,${feature.data.agePercent}%)`;
+				const fillColor = '#3399CC';
+				return new Style({
 					image: new CircleStyle({
-						radius: 10,
+						radius: 6,
 						stroke: new Stroke({
-							color: '#fff'
+							color: selected ? '#f00' : '#fff',
+							width: selected ? 3 : 2
 						}),
 						fill: new Fill({
-							color: '#3399CC'
+							color: fillColor
 						})
 					}),
 					text: new Text({
-						text: age.toString(),
+						text: '',
 						fill: new Fill({
 							color: '#fff'
 						})
 					})
 				});
-				return style;
 			}
 		});
+		this.vectorLayer = vectorLayer;
 
 		const raster = new TileLayer({
 			source: new OSM()
@@ -71,40 +78,51 @@ export class MapBrowseComponent implements OnInit {
 		});
 
 		const map = new Map({
-			layers: [raster, markerLayer],
-			target: 'map',
+			layers: [raster, vectorLayer],
+			target: this.mapElemId,
 			view: view
 		});
 		this.map = map;
 
-		if (!this.locationLocked) {
-			const modify = new Modify({source: markerSource});
-			map.addInteraction(modify);
+		//handle feature clicked (de/select and emit event)
+		map.getViewport().addEventListener("click", function(e) {
+			let firstFeature = true;
+			map.forEachFeatureAtPixel(map.getEventPixel(e), function (feature, layer) {
+				//ignore all except top feature (needed when multiple features overlap on clicked pixel)
+				if (!firstFeature) return;
+				firstFeature = false;
 
-			new Observable<LatLong>((observer) => {
-				feature.on('change', function () {
-					const coords = this.getGeometry().getCoordinates();
-					observer.next({
-						latitude: coords[1],
-						longitude: coords[0]
-					});
-				}, feature);
-			}).pipe(
-				debounceTime(300)
-			).subscribe(loc => this.change.emit(loc));
-		}
-
-		if (this.location) this.set(this.location)
+				const featureData = feature['data'];
+				self.selectedId = (self.selectedId === featureData.id)
+					? null //already selected so deselect it
+					: featureData.id; //select it
+				layer.changed();
+				self.select.emit(self.selectedId);
+			});
+		});
 	}
 
-	set(loc: LatLong) {
-		this.feature.getGeometry().setCoordinates([loc.longitude, loc.latitude]);
+	set(entries: Entry[]) {
+		const features = entries.map(entry => {
+			const agePercent = 0; //TODO: calc this
 
-		this.map.setView(new View({
-			projection: 'EPSG:4326',
-			center: this.feature.getGeometry().getCoordinates(),
-			zoom: 15
-		}));
+			const loc = entry.data.location;
+			const feature = new Feature(new Point([loc.longitude, loc.latitude]));
+			feature.data = {
+				id: entry.id,
+				agePercent
+			};
+			return feature;
+		});
+
+		this.vectorSource.clear();
+		this.vectorSource.addFeatures(features);
+
+		if (features.length > 0) {
+			this.map.getView().fit(this.vectorSource.getExtent());
+			const zoom = Math.min(15, this.map.getView().getZoom()-1);
+			this.map.getView().setZoom(zoom);
+		}
 	}
 }
 
