@@ -18,6 +18,11 @@
 		{{entry.data.note}}
 	</div>
 	<div><u>date</u>: {{moment.unix(entry.data.unixTimestamp).format('MM/DD/YYYY')}}</div>
+	<div><u>location</u>:
+		<span *ngIf="entry.data.location as loc">
+			{{loc.latitude}},{{loc.longitude}}
+		</span>
+	</div>
 	<div>
 		<button (click)="deleteClicked(entry)" class="mat-raised-button mat-mini-fab"><i class="fas fa-trash"></i></button>
 	</div>
