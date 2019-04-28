@@ -46,20 +46,9 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			debounceTime(500)
 		).subscribe(() => this.updateSearchResults());
 
-		this.db.collection(this.endpointService.entries()).ref
-			.orderBy('unixTimestamp', 'desc') //newest first
-			.limit(20)
-			.get()
-			.then(snap => {
-				const entries = snap.docs.map(docSnap => {
-					return {
-						id: docSnap.id,
-						data: docSnap.data() as EntryData
-					} as Entry
-				});
-
-				this.mapComp.set(entries);
-			});
+		this.entries$.subscribe(entries => {
+			this.mapComp.set(entries);
+		});
 	}
 
 	ngOnDestroy() {
