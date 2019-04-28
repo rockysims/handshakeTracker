@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, OnInit, Output} from '@angular/core';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
@@ -6,9 +6,7 @@ import Point from 'ol/geom/Point.js';
 import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
 import {OSM, Vector as VectorSource} from 'ol/source.js';
 import {Circle as CircleStyle, Fill, Stroke, Style, Text} from 'ol/style.js';
-import {Modify} from 'ol/interaction.js';
-import {Observable} from "rxjs";
-import {debounceTime, distinctUntilChanged} from "rxjs/operators";
+import {Subject} from "rxjs";
 import {UniqueIdService} from "../unique-id.service";
 
 @Component({
@@ -18,10 +16,11 @@ import {UniqueIdService} from "../unique-id.service";
 })
 export class MapBrowseComponent implements OnInit, AfterViewInit {
 	public mapElemId: string;
-	selectedId: string|null = null;
-	vectorSource;
-	vectorLayer;
-	map;
+	private viewInit$ = new Subject<void>();
+	private selectedId: string|null = null;
+	private vectorSource;
+	private vectorLayer;
+	private map;
 
 	@Output() private select = new EventEmitter<string|null>();
 
@@ -33,6 +32,8 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 
 	ngAfterViewInit() {
 		const self = this;
+
+		this.viewInit$.complete();
 
 		const vectorSource = new VectorSource({
 			features: []
@@ -102,7 +103,9 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	set(entries: Entry[]) {
+	async set(entries: Entry[]) {
+		await this.viewInit$.toPromise();
+
 		const features = entries.map(entry => {
 			const agePercent = 0; //TODO: calc this
 

@@ -16,13 +16,13 @@
 <br/>
 <div>Results:</div>
 <br/>
-<div *ngFor="let entry of entries$ | async">
+<div *ngFor="let entry of displayEntries$ | async">
 	<app-entry-view
 		[entry]="entry"
 		(delete)="onDelete($event)"
 	></app-entry-view>
 	<br/>
 </div>
-<div *ngIf="(entries$ | async)?.length === 0">
+<div *ngIf="(displayEntries$ | async)?.length === 0">
 	No entries found.
 </div>
