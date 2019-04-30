@@ -13,3 +13,7 @@ interface LatLong {
 	latitude: number,
 	longitude: number
 }
+interface Bounds {
+	min: LatLong,
+	max: LatLong
+}

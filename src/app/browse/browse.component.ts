@@ -2,7 +2,15 @@ import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import * as algoliasearch from 'algoliasearch/dist/algoliasearchLite.min.js';
 import {environment} from "../../environments/environment";
 import {FormControl} from "@angular/forms";
-import {debounceTime, distinctUntilChanged, map, switchMap, takeUntil} from "rxjs/operators";
+import {
+	debounceTime,
+	distinctUntilChanged,
+	filter,
+	map,
+	switchMap,
+	takeUntil,
+	tap
+} from "rxjs/operators";
 import {BehaviorSubject, combineLatest, Observable, Subject} from "rxjs";
 import {Index} from "algoliasearch";
 import {AngularFirestore} from "@angular/fire/firestore";
@@ -18,14 +26,26 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	private ngUnsubscribe = new Subject();
 	private entriesIndex: Index;
 	private filters = {
-		refresh$: new Subject<void>(),
 		searchText$: new BehaviorSubject<string>(''),
-		mapSelectedEntryId$: new BehaviorSubject<string|null>(null)
+		mapBounds$: new BehaviorSubject<Bounds|null>(null),
+		refresh$: new Subject<void>()
 	};
+	private mapSelectedEntryId$ = new BehaviorSubject<string|null>(null);
 	private recentlyDeletedEntryIds = [];
 	private resultEntries$ = new BehaviorSubject<Entry[]>([]);
 	displayEntries$: Observable<Entry[]>;
 	searchTextCtrl = new FormControl();
+	mapModeOptions = [{
+		key: 'fit',
+		name: 'Fit map bounds to results.'
+	}, {
+		key: 'filter',
+		name: 'Filter results by map bounds.'
+	}, {
+		key: 'manual',
+		name: 'Manual.'
+	}];
+	mapMode = 'fit';
 
 	@ViewChild(MapBrowseComponent) private mapComp: MapBrowseComponent;
 
@@ -48,7 +68,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 
 	ngOnInit() {
 		//feed displayEntries$ from mapSelectedEntryId$, resultEntries$
-		this.displayEntries$ = this.filters.mapSelectedEntryId$.pipe(
+		this.displayEntries$ = this.mapSelectedEntryId$.pipe(
 			switchMap(mapSelectedEntryId => {
 				return this.resultEntries$.pipe(
 					map(entries => [...entries].sort((a, b) => {
@@ -61,11 +81,22 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		);
 
 		//feed resultEntries$ from searchText$, refresh$
+		let justChangedMapBounds = false;
 		combineLatest(
 			this.filters.searchText$,
+			this.filters.mapBounds$.pipe(
+				tap(() => justChangedMapBounds = true)
+			),
 			this.filters.refresh$
-		).subscribe(([searchText]) => {
-			this.runSearch(searchText)
+		).pipe(
+			filter(() => {
+				const ignore = justChangedMapBounds && this.mapMode !== 'filter';
+				justChangedMapBounds = false;
+				return !ignore;
+			})
+		).subscribe(([searchText, mapBounds]) => {
+			const bounds = (this.mapMode === 'filter') ? mapBounds : null;
+			this.runSearch(searchText, bounds)
 				.then(resultEntries =>
 					this.resultEntries$.next(resultEntries)
 				);
@@ -86,8 +117,10 @@ export class BrowseComponent implements OnInit, OnDestroy {
 				return aIds === bIds;
 			})
 		).subscribe(entries => {
-			this.mapComp.set(entries);
+			this.mapComp.set(entries, this.mapMode === 'fit');
 		});
+
+		this.filters.refresh$.next();
 	}
 
 	ngOnDestroy() {
@@ -95,14 +128,23 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.ngUnsubscribe.complete();
 	}
 
-	runSearch(searchText): Promise<Entry[]> {
-		const searchFilter = this.recentlyDeletedEntryIds.map(id => {
-			return `NOT objectID:${id}`;
-		}).join(' AND ');
+	runSearch(searchText: string, bounds: Bounds|null): Promise<Entry[]> {
+		const searchFilters = [];
+		searchFilters.push(...this.recentlyDeletedEntryIds.map(id =>
+			`NOT objectID:${id}`
+		));
+		if (bounds) {
+			searchFilters.push(...[
+				'data.location.latitude >= ' + bounds.min.latitude,
+				'data.location.latitude <= ' + bounds.max.latitude,
+				'data.location.longitude >= ' + bounds.min.longitude,
+				'data.location.longitude <= ' + bounds.max.longitude
+			]);
+		}
 
 		return this.entriesIndex.search({
 			query: searchText,
-			filters: searchFilter
+			filters: searchFilters.join(' AND ')
 		}).then(results => {
 			return results.hits as Entry[];
 		}, err => {
@@ -117,7 +159,16 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	}
 
 	onMapSelect(entryId) {
-		this.filters.mapSelectedEntryId$.next(entryId);
+		this.mapSelectedEntryId$.next(entryId);
+	}
+
+	onMapBoundsChange(bounds: Bounds) {
+		this.filters.mapBounds$.next(bounds);
+	}
+
+	onMapModeChange() {
+		this.filters.refresh$.next(); //in case switching to/from 'filter' mapMode
+		if (this.mapMode === 'fit') this.mapComp.fit();
 	}
 }
 

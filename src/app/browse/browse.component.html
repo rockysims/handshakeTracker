@@ -11,7 +11,20 @@
 <div>
 	<app-map-browse
 		(select)="onMapSelect($event)"
+		(bounds)="onMapBoundsChange($event)"
 	></app-map-browse>
+	<mat-radio-group
+		[(ngModel)]="mapMode"
+		(change)="onMapModeChange()"
+	>
+		<mat-radio-button
+			class="radioButton"
+			*ngFor="let option of mapModeOptions"
+			[value]="option.key"
+		>
+			{{option.name}}
+		</mat-radio-button>
+	</mat-radio-group>
 </div>
 <br/>
 <div>Results:</div>

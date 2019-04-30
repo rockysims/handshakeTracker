@@ -18,11 +18,13 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 	public mapElemId: string;
 	private viewInit$ = new Subject<void>();
 	private selectedId: string|null = null;
+	private features;
 	private vectorSource;
 	private vectorLayer;
 	private map;
 
 	@Output() private select = new EventEmitter<string|null>();
+	@Output() private bounds = new EventEmitter<Bounds>();
 
 	constructor(private uniqueIdService: UniqueIdService) {
 		this.mapElemId = 'map'+uniqueIdService.next();
@@ -101,12 +103,29 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 				self.select.emit(self.selectedId);
 			});
 		});
+
+		map.on("moveend", () => {
+			const ext = map.getView().calculateExtent(map.getSize());
+			const lats = [ext[1], ext[3]].sort((a, b) => a - b); //lowest to highest
+			const longs = [ext[0], ext[2]].sort((a, b) => a - b); //lowest to highest
+			const viewportBounds = {
+				min: {
+					latitude: lats[0],
+					longitude: longs[0]
+				},
+				max: {
+					latitude: lats[1],
+					longitude: longs[1]
+				}
+			} as Bounds;
+			this.bounds.emit(viewportBounds);
+		});
 	}
 
-	async set(entries: Entry[]) {
+	async set(entries: Entry[], fit: boolean) {
 		await this.viewInit$.toPromise();
 
-		const features = entries.map(entry => {
+		this.features = entries.map(entry => {
 			const agePercent = 0; //TODO: calc this
 
 			const loc = entry.data.location;
@@ -119,9 +138,15 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		});
 
 		this.vectorSource.clear();
-		this.vectorSource.addFeatures(features);
+		this.vectorSource.addFeatures(this.features);
 
-		if (features.length > 0) {
+		if (fit) this.fit();
+	}
+
+	async fit() {
+		await this.viewInit$.toPromise();
+
+		if (this.features.length > 0) {
 			this.map.getView().fit(this.vectorSource.getExtent());
 			const zoom = Math.min(15, this.map.getView().getZoom()-1);
 			this.map.getView().setZoom(zoom);

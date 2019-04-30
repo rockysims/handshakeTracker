@@ -4,7 +4,7 @@ import { AngularFireAuthModule } from "@angular/fire/auth";
 import { AngularFirestoreModule } from "@angular/fire/firestore";
 import {
 	MatButtonModule,
-	MatCheckboxModule,
+	MatRadioModule,
 	MatDividerModule,
 	MatAutocompleteModule,
 	MatFormFieldModule,
@@ -48,7 +48,7 @@ const FIREBASE_IMPORTS = [
 
 const MATERIAL_IMPORTS = [
 	MatButtonModule,
-	MatCheckboxModule,
+	MatRadioModule,
 	MatDividerModule,
 	MatAutocompleteModule,
 	MatFormFieldModule,
