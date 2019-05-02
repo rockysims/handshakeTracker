@@ -24,7 +24,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 	private map;
 
 	@Output() private select = new EventEmitter<string|null>();
-	@Output() private bounds = new EventEmitter<Bounds>();
+	@Output() private bounds = new EventEmitter<MapBounds>();
 
 	constructor(private uniqueIdService: UniqueIdService) {
 		this.mapElemId = 'map'+uniqueIdService.next();
@@ -117,7 +117,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 					latitude: lats[1],
 					longitude: longs[1]
 				}
-			} as Bounds;
+			} as MapBounds;
 			this.bounds.emit(viewportBounds);
 		});
 	}

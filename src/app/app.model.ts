@@ -13,7 +13,11 @@ interface LatLong {
 	latitude: number,
 	longitude: number
 }
-interface Bounds {
+interface MapBounds {
 	min: LatLong,
 	max: LatLong
+}
+interface DateBounds {
+	min: Date,
+	max: Date
 }

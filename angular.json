@@ -27,9 +27,14 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.less"
+              "src/styles.less",
+              "src/assets/jQRangeSlider-5.7.2/css/iThing-min.css"
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/jQRangeSlider-5.7.2/lib/jquery-2.1.0.min.js",
+              "src/assets/jQRangeSlider-5.7.2/lib/jquery-ui.min.js",
+              "src/assets/jQRangeSlider-5.7.2/jQAllRangeSliders-withRuler-min.js"
+            ]
           },
           "configurations": {
             "production": {

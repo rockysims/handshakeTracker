@@ -39,6 +39,7 @@ import { SandboxComponent } from './sandbox/sandbox.component';
 import { HttpClientModule } from "@angular/common/http";
 import { MapLocationComponent } from './map-location/map-location.component';
 import { MapBrowseComponent } from './map-browse/map-browse.component';
+import { DateRangeSliderComponent } from './date-range-slider/date-range-slider.component';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -78,6 +79,7 @@ const FORMS_IMPORTS = [
 		SandboxComponent,
 		MapLocationComponent,
 		MapBrowseComponent,
+		DateRangeSliderComponent,
 	],
 	imports: [
 		BrowserModule,

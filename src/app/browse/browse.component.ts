@@ -27,7 +27,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	private entriesIndex: Index;
 	private filters = {
 		searchText$: new BehaviorSubject<string>(''),
-		mapBounds$: new BehaviorSubject<Bounds|null>(null),
+		mapBounds$: new BehaviorSubject<MapBounds|null>(null),
 		refresh$: new Subject<void>()
 	};
 	private mapSelectedEntryId$ = new BehaviorSubject<string|null>(null);
@@ -128,17 +128,17 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.ngUnsubscribe.complete();
 	}
 
-	runSearch(searchText: string, bounds: Bounds|null): Promise<Entry[]> {
+	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null): Promise<Entry[]> {
 		const searchFilters = [];
 		searchFilters.push(...this.recentlyDeletedEntryIds.map(id =>
 			`NOT objectID:${id}`
 		));
-		if (bounds) {
+		if (mapBoundsOrNull) {
 			searchFilters.push(...[
-				'data.location.latitude >= ' + bounds.min.latitude,
-				'data.location.latitude <= ' + bounds.max.latitude,
-				'data.location.longitude >= ' + bounds.min.longitude,
-				'data.location.longitude <= ' + bounds.max.longitude
+				'data.location.latitude >= ' + mapBoundsOrNull.min.latitude,
+				'data.location.latitude <= ' + mapBoundsOrNull.max.latitude,
+				'data.location.longitude >= ' + mapBoundsOrNull.min.longitude,
+				'data.location.longitude <= ' + mapBoundsOrNull.max.longitude
 			]);
 		}
 
@@ -162,8 +162,8 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.mapSelectedEntryId$.next(entryId);
 	}
 
-	onMapBoundsChange(bounds: Bounds) {
-		this.filters.mapBounds$.next(bounds);
+	onMapBoundsChange(mapBounds: MapBounds) {
+		this.filters.mapBounds$.next(mapBounds);
 	}
 
 	onMapModeChange() {
