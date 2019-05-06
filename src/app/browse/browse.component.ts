@@ -16,6 +16,8 @@ import {Index} from "algoliasearch";
 import {AngularFirestore} from "@angular/fire/firestore";
 import {EndpointService} from "../endpoint.service";
 import {MapBrowseComponent} from "../map-browse/map-browse.component";
+import * as moment from "moment";
+import {DateRangeSliderComponent} from "../date-range-slider/date-range-slider.component";
 
 @Component({
 	selector: 'app-browse',
@@ -28,6 +30,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	private filters = {
 		searchText$: new BehaviorSubject<string>(''),
 		mapBounds$: new BehaviorSubject<MapBounds|null>(null),
+		dateBounds$: new BehaviorSubject<DateBounds|null>(null),
 		refresh$: new Subject<void>()
 	};
 	private mapSelectedEntryId$ = new BehaviorSubject<string|null>(null);
@@ -46,8 +49,10 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		name: 'Manual.'
 	}];
 	mapMode = 'fit';
+	dateBounds: DateBounds;
 
 	@ViewChild(MapBrowseComponent) private mapComp: MapBrowseComponent;
+	@ViewChild(DateRangeSliderComponent) private dateRangeSliderComp: DateRangeSliderComponent;
 
 	constructor(
 		private db: AngularFirestore,
@@ -64,6 +69,41 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			this.entriesIndex.clearCache();
 			this.filters.refresh$.next();
 		});
+
+		db.collection(endpointService.entries()).ref
+			.orderBy('unixTimestamp', 'asc')
+			.limit(1)
+			.get()
+			.then(snap => {
+				const min = (snap.docs.length > 0)
+					? moment.unix(snap.docs[0].data().unixTimestamp).toDate()
+					: moment().toDate();
+				const max = moment().toDate();
+				this.dateBounds = {min, max};
+				this.filters.dateBounds$.next(this.dateBounds);
+			});
+
+
+
+		//TODO: use this version so it'll update immediately when entries are deleted
+		// db.doc(endpointService.allEntryUnixTimestamps()).valueChanges().pipe(
+		// 	takeUntil(this.ngUnsubscribe)
+		// ).subscribe(allEntryUnixTimestamps => {
+		// 	const unixTimestamps = Object.keys(allEntryUnixTimestamps).map(k => +k) as number[];
+		// 	this.dateRangeSliderComp.setEntryMarks(unixTimestamps);
+		// });
+
+		db.doc(endpointService.allEntryUnixTimestamps()).ref
+			.get()
+			.then(snap => {
+				if (snap.exists) {
+					const unixTimestamps = Object.keys(snap.data()).map(k => +k) as number[];
+					this.dateRangeSliderComp.setEntryMarks(unixTimestamps);
+				}
+			});
+
+
+
 	}
 
 	ngOnInit() {
@@ -87,6 +127,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			this.filters.mapBounds$.pipe(
 				tap(() => justChangedMapBounds = true)
 			),
+			this.filters.dateBounds$,
 			this.filters.refresh$
 		).pipe(
 			filter(() => {
@@ -94,9 +135,9 @@ export class BrowseComponent implements OnInit, OnDestroy {
 				justChangedMapBounds = false;
 				return !ignore;
 			})
-		).subscribe(([searchText, mapBounds]) => {
-			const bounds = (this.mapMode === 'filter') ? mapBounds : null;
-			this.runSearch(searchText, bounds)
+		).subscribe(([latestSearchText, latestMapBounds, latestDateBounds]) => {
+			const mapBounds = (this.mapMode === 'filter') ? latestMapBounds : null;
+			this.runSearch(latestSearchText, mapBounds, latestDateBounds)
 				.then(resultEntries =>
 					this.resultEntries$.next(resultEntries)
 				);
@@ -128,7 +169,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.ngUnsubscribe.complete();
 	}
 
-	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null): Promise<Entry[]> {
+	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null, dateBoundsOrNull: DateBounds|null): Promise<Entry[]> {
 		const searchFilters = [];
 		searchFilters.push(...this.recentlyDeletedEntryIds.map(id =>
 			`NOT objectID:${id}`
@@ -139,6 +180,12 @@ export class BrowseComponent implements OnInit, OnDestroy {
 				'data.location.latitude <= ' + mapBoundsOrNull.max.latitude,
 				'data.location.longitude >= ' + mapBoundsOrNull.min.longitude,
 				'data.location.longitude <= ' + mapBoundsOrNull.max.longitude
+			]);
+		}
+		if (dateBoundsOrNull) {
+			searchFilters.push(...[
+				'data.unixTimestamp >= ' + moment(dateBoundsOrNull.min).unix(),
+				'data.unixTimestamp <= ' + moment(dateBoundsOrNull.max).unix()
 			]);
 		}
 
@@ -169,6 +216,10 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	onMapModeChange() {
 		this.filters.refresh$.next(); //in case switching to/from 'filter' mapMode
 		if (this.mapMode === 'fit') this.mapComp.fit();
+	}
+
+	onDateBoundsChange(dateBounds: DateBounds) {
+		this.filters.dateBounds$.next(dateBounds);
 	}
 }
 

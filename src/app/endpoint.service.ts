@@ -11,6 +11,7 @@ export class EndpointService {
 	entry = (entryId: string) => this.build(`entries/${entryId}`);
 	latestChange = () => this.build('latest/change');
 	latestIndex = () => this.build('latest/index');
+	allEntryUnixTimestamps = () => this.build('derived/allEntryUnixTimestamps');
 
 	private build(path: string): string {
 		const user = this.userService.currentUser;

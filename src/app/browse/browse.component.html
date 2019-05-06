@@ -28,7 +28,11 @@
 	<br/>
 </div>
 <div>
-	<app-date-range-slider></app-date-range-slider>
+	<app-date-range-slider
+		*ngIf="dateBounds"
+		[dateBounds]="dateBounds"
+		(change)="onDateBoundsChange($event)"
+	></app-date-range-slider>
 </div>
 <br/>
 <div>Results:</div>

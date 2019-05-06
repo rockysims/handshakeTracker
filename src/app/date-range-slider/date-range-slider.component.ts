@@ -1,6 +1,7 @@
 import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {UniqueIdService} from "../unique-id.service";
 import * as moment from "moment";
+import {Moment} from "moment";
 declare var $: any;
 
 @Component({
@@ -10,8 +11,11 @@ declare var $: any;
 })
 export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 	public sliderElemId: string;
+	private dateRangeSlider: any;
+	private startDate: Moment;
+	private endDate: Moment;
 
-	@Input() private startDate: Date;
+	@Input() private dateBounds: DateBounds;
 	@Output() private change = new EventEmitter<DateBounds>();
 
 	constructor(private uniqueIdService: UniqueIdService) {
@@ -22,38 +26,54 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 
 	ngAfterViewInit() {
 		const period = {
-			start: moment().add(-12, 'month'),
-			end: moment()
+			start: moment(this.dateBounds.min),
+			end: moment(this.dateBounds.max)
 		};
+		this.startDate = period.end.diff(period.start, 'month') < 2
+			? moment(period.end).add(-2, 'month').startOf('month')
+			: period.start.startOf('month');
+		this.endDate = moment(period.end);
 
+		this.dateRangeSlider = $(`#${this.sliderElemId}`).dateRangeSlider({
+			bounds: {
+				min: this.startDate,
+				max: this.endDate,
+			},
+			defaultValues: {
+				min: this.startDate,
+				max: this.endDate
+			}
+		});
 
+		this.dateRangeSlider.bind("valuesChanged", (e, data) => {
+			const {min, max} = data.values;
+			this.change.emit({min, max});
+		});
 
-		const startDate = period.end.diff(period.start, 'month') < 2
-			? moment(period.end).add(-2, 'month')
-			: period.start;
-		const endDate = moment(period.end);
+		// $('.ui-rangeSlider-bar').css('opacity', 0.9);
 
-		const rulerUnit = moment(endDate).diff(startDate, 'month') > 12
+		this.setEntryMarks([]);
+	}
+
+	setEntryMarks(unixTimestamps: number[]) {
+		unixTimestamps.sort((a, b) => a - b); //lowest to highest
+		console.log('setEntryMarks() unixTimestamps: ', unixTimestamps);
+
+		const rulerUnit = moment(this.endDate).diff(this.startDate, 'month') > 12
 			? 'year'
 			: 'month';
 		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-		$(`#${this.sliderElemId}`).dateRangeSlider({
-			bounds: {
-				min: startDate,
-				max: endDate,
-			},
-			defaultValues: {
-				min: endDate, //TODO: change to startDate
-				max: endDate
-			},
+
+		let stampIndex = 0;
+		this.dateRangeSlider.dateRangeSlider({
 			scales: [{
-				first: function(value) {
+				first: (value) => {
+					return moment(value).startOf(rulerUnit);
+				},
+				next: (value) => {
 					return moment(value).add(1, rulerUnit).startOf(rulerUnit);
 				},
-				next: function(value) {
-					return moment(value).add(1, rulerUnit).startOf(rulerUnit);
-				},
-				label: function(value) {
+				label: (value) => {
 					const val = moment(value);
 					if (rulerUnit === 'month') {
 						return months[val.month()];
@@ -67,28 +87,47 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 					span.css('font-size', '10px');
 					// span.css('bottom', '10px');
 				}
-			},
-			// {
-			// 	first: function(value) { return value; },
-			// 	end: function(value) { return value; },
-			// 	next: function(value) {
-			// 		return moment(value).add(Math.floor(Math.random() * 15), 'day');
-			// 	},
-			// 	label: function(value) {
-			// 		return '';
-			// 	},
-			// 	format: function(tickContainer, tickStart, tickEnd) {
-			// 		const span = tickContainer.find('div.ui-ruler-tick-inner');
-			// 		// span.css('border-width', '2px');
-			// 		span.css('border-color', '#fff');
-			// 		span.css('margin-top', '28px');
-			// 		span.css('position', 'relative');
-			// 		// span.css('z-index', '2');
-			// 	}
-			// }
-			]
-		});
+			}, {
+				first: () => {
+					if (stampIndex < unixTimestamps.length) {
+						return moment.unix(unixTimestamps[stampIndex++]);
+					} else {
 
-		// $('.ui-rangeSlider-bar').css('opacity', 0.9);
+
+
+						//TODO: try to find better way to not show it
+						return moment(this.endDate).add(1, 'day'); //don't show it
+
+
+
+					}
+				},
+				end: (value) => { return value; },
+				next: () => {
+					if (stampIndex < unixTimestamps.length) {
+						return moment.unix(unixTimestamps[stampIndex++]);
+					} else {
+
+
+
+						//TODO: try to find better way to not show it
+						return moment(this.endDate).add(1, 'day'); //don't show it
+
+
+
+					}
+				},
+				label: () => {
+					return '';
+				},
+				format: (tickContainer, tickStart, tickEnd) => {
+					const span = tickContainer.find('div.ui-ruler-tick-inner');
+					span.css('border-color', '#0ff');
+					span.css('margin-top', '28px');
+					span.css('position', 'relative');
+					span.css('z-index', '2');
+				}
+			}]
+		})
 	}
 }

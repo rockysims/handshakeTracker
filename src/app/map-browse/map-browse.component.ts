@@ -24,7 +24,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 	private map;
 
 	@Output() private select = new EventEmitter<string|null>();
-	@Output() private bounds = new EventEmitter<MapBounds>();
+	@Output() private bounds = new EventEmitter<MapBounds>(); //TODO: change 'bounds' to 'change'
 
 	constructor(private uniqueIdService: UniqueIdService) {
 		this.mapElemId = 'map'+uniqueIdService.next();

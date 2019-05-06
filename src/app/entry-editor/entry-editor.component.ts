@@ -81,7 +81,7 @@ export class EntryEditorComponent implements OnInit {
 
 	onDateChange(dateMoment: Moment) {
 		this.update({
-			unixTimestamp: dateMoment.unix()
+			unixTimestamp: dateMoment.startOf('day').unix()
 		});
 	}
 
