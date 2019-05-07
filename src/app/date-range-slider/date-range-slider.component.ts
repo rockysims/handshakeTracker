@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Input, NgZone, OnInit, Output} from '@angular/core';
 import {UniqueIdService} from "../unique-id.service";
 import * as moment from "moment";
 import {Moment} from "moment";
@@ -18,7 +18,8 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 	@Input() private dateBounds: DateBounds;
 	@Output() private change = new EventEmitter<DateBounds>();
 
-	constructor(private uniqueIdService: UniqueIdService) {
+	constructor(private uniqueIdService: UniqueIdService,
+				private ngZone: NgZone) {
 		this.sliderElemId = 'slider'+uniqueIdService.next();
 	}
 
@@ -45,9 +46,11 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 			}
 		});
 
-		this.dateRangeSlider.bind("valuesChanged", (e, data) => {
+		this.dateRangeSlider.on("valuesChanged", (e, data) => {
 			const {min, max} = data.values;
-			this.change.emit({min, max});
+			this.ngZone.run(() => {
+				this.change.emit({min, max});
+			});
 		});
 
 		// $('.ui-rangeSlider-bar').css('opacity', 0.9);
