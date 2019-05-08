@@ -1,7 +1,8 @@
-import {AfterViewInit, Component, EventEmitter, Input, NgZone, OnInit, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, NgZone, OnInit, Output} from '@angular/core';
 import {UniqueIdService} from "../unique-id.service";
-import * as moment from "moment";
+import {Deferred} from "../my/deferred.class";
 import {Moment} from "moment";
+import * as moment from "moment";
 declare var $: any;
 
 @Component({
@@ -11,11 +12,11 @@ declare var $: any;
 })
 export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 	public sliderElemId: string;
-	private dateRangeSlider: any;
-	private startDate: Moment;
-	private endDate: Moment;
+	private dateRangeSliderDeferred = new Deferred<any>();
+	private startDate: Moment = moment();
+	private endDate: Moment = moment();
+	private unixTimestamps: number[] = [];
 
-	@Input() private dateBounds: DateBounds;
 	@Output() private change = new EventEmitter<DateBounds>();
 
 	constructor(private uniqueIdService: UniqueIdService,
@@ -26,27 +27,20 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 	ngOnInit() {}
 
 	ngAfterViewInit() {
-		const period = {
-			start: moment(this.dateBounds.min),
-			end: moment(this.dateBounds.max)
+		this.startDate = moment().add(-12, 'month').startOf('month');
+		this.endDate = moment();
+		const defaultBounds = {
+			min: this.startDate,
+			max: this.endDate
 		};
-		this.startDate = period.end.diff(period.start, 'month') < 2
-			? moment(period.end).add(-2, 'month').startOf('month')
-			: period.start.startOf('month');
-		this.endDate = moment(period.end);
 
-		this.dateRangeSlider = $(`#${this.sliderElemId}`).dateRangeSlider({
-			bounds: {
-				min: this.startDate,
-				max: this.endDate,
-			},
-			defaultValues: {
-				min: this.startDate,
-				max: this.endDate
-			}
+		const dateRangeSlider = $(`#${this.sliderElemId}`).dateRangeSlider({
+			bounds: defaultBounds,
+			defaultValues: defaultBounds
 		});
+		this.dateRangeSliderDeferred.resolve(dateRangeSlider);
 
-		this.dateRangeSlider.on("valuesChanged", (e, data) => {
+		dateRangeSlider.on("valuesChanged", (e, data) => {
 			const {min, max} = data.values;
 			this.ngZone.run(() => {
 				this.change.emit({min, max});
@@ -55,12 +49,14 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 
 		// $('.ui-rangeSlider-bar').css('opacity', 0.9);
 
-		this.setEntryMarks([]);
+		this.setEntryMarks();
 	}
 
-	setEntryMarks(unixTimestamps: number[]) {
-		unixTimestamps.sort((a, b) => a - b); //lowest to highest
-		console.log('setEntryMarks() unixTimestamps: ', unixTimestamps);
+	async setEntryMarks(unixTimestamps: number[] = null) {
+		if (unixTimestamps) {
+			this.unixTimestamps = unixTimestamps.sort((a, b) => a - b); //lowest to highest
+		}
+		const dateRangeSlider = await this.dateRangeSliderDeferred.promise;
 
 		const rulerUnit = moment(this.endDate).diff(this.startDate, 'month') > 12
 			? 'year'
@@ -68,7 +64,7 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 		let stampIndex = 0;
-		this.dateRangeSlider.dateRangeSlider({
+		dateRangeSlider.dateRangeSlider({
 			scales: [{
 				first: (value) => {
 					return moment(value).startOf(rulerUnit);
@@ -92,32 +88,18 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 				}
 			}, {
 				first: () => {
-					if (stampIndex < unixTimestamps.length) {
-						return moment.unix(unixTimestamps[stampIndex++]);
+					if (stampIndex < this.unixTimestamps.length) {
+						return moment.unix(this.unixTimestamps[stampIndex++]);
 					} else {
-
-
-
-						//TODO: try to find better way to not show it
 						return moment(this.endDate).add(1, 'day'); //don't show it
-
-
-
 					}
 				},
 				end: (value) => { return value; },
 				next: () => {
-					if (stampIndex < unixTimestamps.length) {
-						return moment.unix(unixTimestamps[stampIndex++]);
+					if (stampIndex < this.unixTimestamps.length) {
+						return moment.unix(this.unixTimestamps[stampIndex++]);
 					} else {
-
-
-
-						//TODO: try to find better way to not show it
 						return moment(this.endDate).add(1, 'day'); //don't show it
-
-
-
 					}
 				},
 				label: () => {
@@ -131,6 +113,35 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 					span.css('z-index', '2');
 				}
 			}]
-		})
+		});
+	}
+
+	async setBounds(dateBounds: DateBounds, setRangeToBounds: boolean) {
+		const dateRangeSlider = await this.dateRangeSliderDeferred.promise;
+
+		const period = {
+			start: moment(dateBounds.min),
+			end: moment(dateBounds.max)
+		};
+		this.startDate = period.end.diff(period.start, 'month') < 2
+			? moment(period.end).add(-2, 'month').startOf('month')
+			: period.start.startOf('month');
+		this.endDate = moment(period.end);
+
+		dateRangeSlider.dateRangeSlider(
+			"option",
+			{
+				bounds: {
+					min: this.startDate.toDate(),
+					max: this.endDate.toDate()
+				}
+			}
+		);
+
+		if (setRangeToBounds) {
+			dateRangeSlider.dateRangeSlider("values", this.startDate.toDate(), this.endDate.toDate());
+		}
+
+		this.setEntryMarks(); //redraw entry marks
 	}
 }

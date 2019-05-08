@@ -49,7 +49,6 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		name: 'Manual.'
 	}];
 	mapMode = 'fit';
-	dateBounds: DateBounds;
 
 	@ViewChild(MapBrowseComponent) private mapComp: MapBrowseComponent;
 	@ViewChild(DateRangeSliderComponent) private dateRangeSliderComp: DateRangeSliderComponent;
@@ -61,6 +60,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.entriesIndex = algoliasearch(environment.algolia.appId, environment.algolia.searchKey)
 			.initIndex('entries');
 
+		//refresh results when algolia index is updated
 		db.doc(endpointService.latestIndex()).valueChanges().pipe(
 			takeUntil(this.ngUnsubscribe)
 		).subscribe(() => {
@@ -70,6 +70,8 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			this.filters.refresh$.next();
 		});
 
+		//set date range slider bounds = earliestEntry to now
+		//and set selected date range equal to bounds
 		db.collection(endpointService.entries()).ref
 			.orderBy('unixTimestamp', 'asc')
 			.limit(1)
@@ -79,31 +81,18 @@ export class BrowseComponent implements OnInit, OnDestroy {
 					? moment.unix(snap.docs[0].data().unixTimestamp).toDate()
 					: moment().toDate();
 				const max = moment().toDate();
-				this.dateBounds = {min, max};
-				this.filters.dateBounds$.next(this.dateBounds);
+				const dateBounds = {min, max};
+				this.dateRangeSliderComp.setBounds(dateBounds, true);
+				this.filters.dateBounds$.next(dateBounds);
 			});
 
-
-
-		//TODO: use this version so it'll update immediately when entries are deleted
-		// db.doc(endpointService.allEntryUnixTimestamps()).valueChanges().pipe(
-		// 	takeUntil(this.ngUnsubscribe)
-		// ).subscribe(allEntryUnixTimestamps => {
-		// 	const unixTimestamps = Object.keys(allEntryUnixTimestamps).map(k => +k) as number[];
-		// 	this.dateRangeSliderComp.setEntryMarks(unixTimestamps);
-		// });
-
-		db.doc(endpointService.allEntryUnixTimestamps()).ref
-			.get()
-			.then(snap => {
-				if (snap.exists) {
-					const unixTimestamps = Object.keys(snap.data()).map(k => +k) as number[];
-					this.dateRangeSliderComp.setEntryMarks(unixTimestamps);
-				}
-			});
-
-
-
+		//show entry marks on date range slider (and keep marks updated)
+		db.doc(endpointService.allEntryUnixTimestamps()).valueChanges().pipe(
+			takeUntil(this.ngUnsubscribe)
+		).subscribe(allEntryUnixTimestamps => {
+			const unixTimestamps = Object.keys(allEntryUnixTimestamps).map(k => +k) as number[];
+			this.dateRangeSliderComp.setEntryMarks(unixTimestamps);
+		});
 	}
 
 	ngOnInit() {
@@ -111,6 +100,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.displayEntries$ = this.mapSelectedEntryId$.pipe(
 			switchMap(mapSelectedEntryId => {
 				return this.resultEntries$.pipe(
+					//if entry select on map, move to top of list
 					map(entries => [...entries].sort((a, b) => {
 						if (a.id === mapSelectedEntryId) return -1; //a before b
 						else if (b.id === mapSelectedEntryId) return 1; //b before a
@@ -120,7 +110,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			})
 		);
 
-		//feed resultEntries$ from searchText$, refresh$
+		//feed resultEntries$ from searchText$, mapBounds$, dateBounds$, refresh$
 		let justChangedMapBounds = false;
 		combineLatest(
 			this.filters.searchText$,
@@ -130,17 +120,21 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			this.filters.dateBounds$,
 			this.filters.refresh$
 		).pipe(
+			debounceTime(100), //prevent multiple searches during init
+			//ignore mapBounds$ changes unless mapMode is 'filter'
 			filter(() => {
 				const ignore = justChangedMapBounds && this.mapMode !== 'filter';
 				justChangedMapBounds = false;
 				return !ignore;
 			})
-		).subscribe(([latestSearchText, latestMapBounds, latestDateBounds]) => {
-			const mapBounds = (this.mapMode === 'filter') ? latestMapBounds : null;
-			this.runSearch(latestSearchText, mapBounds, latestDateBounds)
-				.then(resultEntries =>
-					this.resultEntries$.next(resultEntries)
-				);
+		).subscribe(([searchText, mapBounds, dateBounds]) => {
+			this.runSearch(
+				searchText,
+				(this.mapMode === 'filter') ? mapBounds : null,
+				dateBounds
+			).then(resultEntries =>
+				this.resultEntries$.next(resultEntries)
+			);
 		});
 
 		//feed searchText$
@@ -158,7 +152,8 @@ export class BrowseComponent implements OnInit, OnDestroy {
 				return aIds === bIds;
 			})
 		).subscribe(entries => {
-			this.mapComp.set(entries, this.mapMode === 'fit');
+			const fitToEntries = this.mapMode === 'fit';
+			this.mapComp.set(entries, fitToEntries);
 		});
 
 		this.filters.refresh$.next();
