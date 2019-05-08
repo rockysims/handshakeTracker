@@ -36,7 +36,8 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 
 		const dateRangeSlider = $(`#${this.sliderElemId}`).dateRangeSlider({
 			bounds: defaultBounds,
-			defaultValues: defaultBounds
+			defaultValues: defaultBounds,
+			formatter: val => moment(val).format('M/D/YYYY')
 		});
 		this.dateRangeSliderDeferred.resolve(dateRangeSlider);
 
