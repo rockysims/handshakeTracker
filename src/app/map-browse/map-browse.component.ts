@@ -3,6 +3,7 @@ import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import Point from 'ol/geom/Point.js';
+import {defaults as interactionDefaults} from 'ol/interaction.js';
 import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
 import {OSM, Vector as VectorSource} from 'ol/source.js';
 import {Circle as CircleStyle, Fill, Stroke, Style, Text} from 'ol/style.js';
@@ -81,6 +82,9 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		});
 
 		const map = new Map({
+			interactions: interactionDefaults({
+				mouseWheelZoom: false
+			} as any),
 			layers: [raster, vectorLayer],
 			target: this.mapElemId,
 			view: view
