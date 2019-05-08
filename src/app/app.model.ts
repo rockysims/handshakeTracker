@@ -17,7 +17,7 @@ interface MapBounds {
 	min: LatLong,
 	max: LatLong
 }
-interface DateBounds {
+interface DateRange {
 	min: Date,
 	max: Date
 }

@@ -17,7 +17,7 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 	private endDate: Moment = moment();
 	private unixTimestamps: number[] = [];
 
-	@Output() private change = new EventEmitter<DateBounds>();
+	@Output() private change = new EventEmitter<DateRange>();
 
 	constructor(private uniqueIdService: UniqueIdService,
 				private ngZone: NgZone) {
@@ -116,17 +116,17 @@ export class DateRangeSliderComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	async setBounds(dateBounds: DateBounds, setRangeToBounds: boolean) {
+	async setBounds(dateRange: DateRange, setRangeToBounds: boolean) {
 		const dateRangeSlider = await this.dateRangeSliderDeferred.promise;
 
-		const period = {
-			start: moment(dateBounds.min),
-			end: moment(dateBounds.max)
+		const bounds = {
+			start: moment(dateRange.min),
+			end: moment(dateRange.max)
 		};
-		this.startDate = period.end.diff(period.start, 'month') < 2
-			? moment(period.end).add(-2, 'month').startOf('month')
-			: period.start.startOf('month');
-		this.endDate = moment(period.end);
+		this.startDate = bounds.end.diff(bounds.start, 'month') < 2
+			? moment(bounds.end).add(-2, 'month').startOf('month')
+			: bounds.start.startOf('month');
+		this.endDate = moment(bounds.end);
 
 		dateRangeSlider.dateRangeSlider(
 			"option",

@@ -30,7 +30,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	private filters = {
 		searchText$: new BehaviorSubject<string>(''),
 		mapBounds$: new BehaviorSubject<MapBounds|null>(null),
-		dateBounds$: new BehaviorSubject<DateBounds|null>(null),
+		dateRange$: new BehaviorSubject<DateRange|null>(null),
 		refresh$: new Subject<void>()
 	};
 	private mapSelectedEntryId$ = new BehaviorSubject<string|null>(null);
@@ -81,9 +81,9 @@ export class BrowseComponent implements OnInit, OnDestroy {
 					? moment.unix(snap.docs[0].data().unixTimestamp).toDate()
 					: moment().toDate();
 				const max = moment().toDate();
-				const dateBounds = {min, max};
-				this.dateRangeSliderComp.setBounds(dateBounds, true);
-				this.filters.dateBounds$.next(dateBounds);
+				const dateRange = {min, max};
+				this.dateRangeSliderComp.setBounds(dateRange, true);
+				this.filters.dateRange$.next(dateRange);
 			});
 
 		//show entry marks on date range slider (and keep marks updated)
@@ -110,14 +110,14 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			})
 		);
 
-		//feed resultEntries$ from searchText$, mapBounds$, dateBounds$, refresh$
+		//feed resultEntries$ from searchText$, mapBounds$, dateRange$, refresh$
 		let justChangedMapBounds = false;
 		combineLatest(
 			this.filters.searchText$,
 			this.filters.mapBounds$.pipe(
 				tap(() => justChangedMapBounds = true)
 			),
-			this.filters.dateBounds$,
+			this.filters.dateRange$,
 			this.filters.refresh$
 		).pipe(
 			debounceTime(100), //prevent multiple searches during init
@@ -127,11 +127,11 @@ export class BrowseComponent implements OnInit, OnDestroy {
 				justChangedMapBounds = false;
 				return !ignore;
 			})
-		).subscribe(([searchText, mapBounds, dateBounds]) => {
+		).subscribe(([searchText, mapBounds, dateRange]) => {
 			this.runSearch(
 				searchText,
 				(this.mapMode === 'filter') ? mapBounds : null,
-				dateBounds
+				dateRange
 			).then(resultEntries =>
 				this.resultEntries$.next(resultEntries)
 			);
@@ -164,7 +164,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		this.ngUnsubscribe.complete();
 	}
 
-	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null, dateBoundsOrNull: DateBounds|null): Promise<Entry[]> {
+	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null, dateRangeOrNull: DateRange|null): Promise<Entry[]> {
 		const searchFilters = [];
 		searchFilters.push(...this.recentlyDeletedEntryIds.map(id =>
 			`NOT objectID:${id}`
@@ -177,10 +177,10 @@ export class BrowseComponent implements OnInit, OnDestroy {
 				'data.location.longitude <= ' + mapBoundsOrNull.max.longitude
 			]);
 		}
-		if (dateBoundsOrNull) {
+		if (dateRangeOrNull) {
 			searchFilters.push(...[
-				'data.unixTimestamp >= ' + moment(dateBoundsOrNull.min).unix(),
-				'data.unixTimestamp <= ' + moment(dateBoundsOrNull.max).unix()
+				'data.unixTimestamp >= ' + moment(dateRangeOrNull.min).unix(),
+				'data.unixTimestamp <= ' + moment(dateRangeOrNull.max).unix()
 			]);
 		}
 
@@ -213,8 +213,8 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		if (this.mapMode === 'fit') this.mapComp.fit();
 	}
 
-	onDateBoundsChange(dateBounds: DateBounds) {
-		this.filters.dateBounds$.next(dateBounds);
+	onDateRangeChange(dateRange: DateRange) {
+		this.filters.dateRange$.next(dateRange);
 	}
 }
 
