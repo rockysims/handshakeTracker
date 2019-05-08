@@ -92,6 +92,7 @@ export class EntryEditorComponent implements OnInit {
 
 	async clear() {
 		this.update(EntryEditorComponent.buildFreshEntryData(await this.locationOrDefaultPromise));
+		this.mapComp.centerAndZoom();
 	}
 
 	get data(): EntryData {

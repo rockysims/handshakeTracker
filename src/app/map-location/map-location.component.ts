@@ -125,6 +125,14 @@ export class MapLocationComponent implements OnInit, AfterViewInit {
 			center
 		}));
 	}
+
+	centerAndZoom() {
+		this.map.setView(new View({
+			projection: 'EPSG:4326',
+			zoom: 15,
+			center: this.feature.getGeometry().getCoordinates()
+		}));
+	}
 }
 
 
