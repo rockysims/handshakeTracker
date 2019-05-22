@@ -7,8 +7,8 @@ import {defaults as interactionDefaults} from 'ol/interaction.js';
 import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
 import {OSM, Vector as VectorSource} from 'ol/source.js';
 import {Circle as CircleStyle, Fill, Stroke, Style, Text} from 'ol/style.js';
-import {Subject} from "rxjs";
 import {UniqueIdService} from "../unique-id.service";
+import {Deferred} from "../my/deferred.class";
 
 @Component({
 	selector: 'app-map-browse',
@@ -17,7 +17,7 @@ import {UniqueIdService} from "../unique-id.service";
 })
 export class MapBrowseComponent implements OnInit, AfterViewInit {
 	public mapElemId: string;
-	private viewInit$ = new Subject<void>(); //TODO: change to Deferred
+	private viewInitDeferred = new Deferred();
 	private selectedId: string|null = null;
 	private features;
 	private vectorSource;
@@ -36,7 +36,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 	ngAfterViewInit() {
 		const self = this;
 
-		this.viewInit$.complete();
+		this.viewInitDeferred.resolve();
 
 		const vectorSource = new VectorSource({
 			features: []
@@ -130,7 +130,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		entries: Entry[],
 		fitMapToEntries: boolean
 	) {
-		await this.viewInit$.toPromise();
+		await this.viewInitDeferred.promise;
 
 		this.features = entries.map(entry => {
 			const agePercent = 0; //TODO: calc this
@@ -151,7 +151,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 	}
 
 	async fitMapToEntries() {
-		await this.viewInit$.toPromise();
+		await this.viewInitDeferred.promise;
 
 		if (this.features.length > 0) {
 			this.map.getView().fit(this.vectorSource.getExtent());
