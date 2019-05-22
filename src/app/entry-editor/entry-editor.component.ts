@@ -100,7 +100,7 @@ export class EntryEditorComponent implements OnInit {
 	}
 
 	async clear() {
-		this.update(EntryEditorComponent.buildFreshEntryData(await this.locationOrDefaultPromise));
+		await this.update(EntryEditorComponent.buildFreshEntryData(await this.locationOrDefaultPromise));
 		this.mapComp.centerAndZoom();
 	}
 
@@ -109,19 +109,18 @@ export class EntryEditorComponent implements OnInit {
 	}
 
 	private ignoreUpdates = false;
-	private update(data: Partial<EntryData>, suppressDisplayUpdates = false) {
+	private async update(data: Partial<EntryData>, suppressDisplayUpdates = false) {
 		if (this.ignoreUpdates) return;
 		this.ignoreUpdates = true;
 
 		Object.assign(this._entryData, data);
 		if (!suppressDisplayUpdates) {
-			this.loadedPromise.then(() => {
-				this.nameComp.set(this._entryData.name);
-				this.tagsComp.set(this._entryData.tags);
-				this.noteCtrl.setValue(this._entryData.note);
-				this.dateMoment = moment.unix(this._entryData.unixTimestamp);
-				this.mapComp.set(this._entryData.location);
-			});
+			await this.loadedPromise;
+			this.nameComp.set(this._entryData.name);
+			this.tagsComp.set(this._entryData.tags);
+			this.noteCtrl.setValue(this._entryData.note);
+			this.dateMoment = moment.unix(this._entryData.unixTimestamp);
+			this.mapComp.set(this._entryData.location);
 		}
 		this.changeEvent.next();
 
