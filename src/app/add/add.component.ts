@@ -1,8 +1,6 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
-import {AngularFirestore, AngularFirestoreDocument} from "@angular/fire/firestore";
-import {EntryService} from "../entry.service";
 import {EntryEditorComponent} from "../entry-editor/entry-editor.component";
-import {EndpointService} from "../endpoint.service";
+import {EntryService} from "../entry.service";
 
 @Component({
 	selector: 'app-add',
@@ -17,14 +15,17 @@ export class AddComponent implements OnInit {
 	ngOnInit() {}
 
 	clear() {
-		this.entryEditor.clear();
+		return this.entryEditor.clear();
 	}
 
 	submit() {
-		this.entryService.create(this.entryEditor.data)
+		//TODO: show a progress indicator
+		this.entryService.create(this.entryEditor.entryData)
 			.then(() => {
-				//TODO: show a success indicator (with link to new entry?)
+				//TODO: show a success indicator (with link to new entry? or show new entry under add form?)
 				this.clear();
+			}, () => {
+				//TODO: show a failure indicator?
 			});
 	}
 }

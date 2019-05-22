@@ -8,25 +8,23 @@ import {EndpointService} from "./endpoint.service";
 	providedIn: 'root'
 })
 export class EntryService {
-	public entries$: Observable<Entry[]>;
 	private entriesCol: AngularFirestoreCollection<EntryData>;
 
 	constructor(private db: AngularFirestore,
 				private endpointService: EndpointService) {
 		this.entriesCol = this.db.collection<EntryData>(this.endpointService.entries());
+	}
 
-		this.entries$ = this.entriesCol
-			.snapshotChanges()
-			.pipe(
-				map(actions =>
-					actions.map(a => {
-						return {
-							id: a.payload.doc.id,
-							data: a.payload.doc.data() as EntryData
-						} as Entry;
-					})
-				)
-			);
+	get(entryId: string): Promise<Entry> {
+		return this.entryDocFor(entryId)
+			.get()
+			.toPromise()
+			.then(doc => {
+				return {
+					id: doc.id,
+					data: doc.data() as EntryData
+				} as Entry;
+			});
 	}
 
 	create(entry: EntryData) {
@@ -36,16 +34,16 @@ export class EntryService {
 
 	update(entry: Entry) {
 		console.log('EntryService.update() called with ', entry); //TODO: delete this line
-		return this.entryDocFor(entry).update(entry.data);
+		return this.entryDocFor(entry.id).update(entry.data);
 	}
 
 	delete(entry: Entry) {
 		console.log('EntryService.delete() called with ', entry); //TODO: delete this line
-		return this.entryDocFor(entry).delete();
+		return this.entryDocFor(entry.id).delete();
 	}
 
-	private entryDocFor(entry: Entry) {
-		return this.db.doc<EntryData>(this.endpointService.entry(entry.id));
+	private entryDocFor(entryId: string) {
+		return this.db.doc<EntryData>(this.endpointService.entry(entryId));
 	}
 }
 

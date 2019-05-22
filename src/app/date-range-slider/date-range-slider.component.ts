@@ -3,6 +3,11 @@ import {UniqueIdService} from "../unique-id.service";
 import {Deferred} from "../my/deferred.class";
 import {Moment} from "moment";
 import * as moment from "moment";
+
+/**
+ * Declare jquery as any to workaround some finicky typing issues with the older version. Should
+ * probably be upgraded to a modern component at some point.
+ */
 declare var $: any;
 
 @Component({

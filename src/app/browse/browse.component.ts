@@ -153,7 +153,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			})
 		).subscribe(entries => {
 			const fitToEntries = this.mapMode === 'fit';
-			this.mapComp.set(entries, fitToEntries);
+			this.mapComp.setEntries(entries, fitToEntries);
 		});
 
 		this.filters.refresh$.next();
@@ -166,7 +166,14 @@ export class BrowseComponent implements OnInit, OnDestroy {
 
 	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null, dateRangeOrNull: DateRange|null): Promise<Entry[]> {
 		const searchFilters = [];
+
+
+
+		//TODO: change to searchFilters.push(...this.recentChangeService.deletedEntryIds.map(id =>
 		searchFilters.push(...this.recentlyDeletedEntryIds.map(id =>
+
+
+
 			`NOT objectID:${id}`
 		));
 		if (mapBoundsOrNull) {
@@ -196,7 +203,14 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	}
 
 	onDelete(entry) {
+
+
+
+		//TODO: change to this.recentChangeService.deletedEntryIds
 		this.recentlyDeletedEntryIds.push(entry.id);
+
+
+
 		this.filters.refresh$.next();
 	}
 
@@ -210,7 +224,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 
 	onMapModeChange() {
 		this.filters.refresh$.next(); //in case switching to/from 'filter' mapMode
-		if (this.mapMode === 'fit') this.mapComp.fit();
+		if (this.mapMode === 'fit') this.mapComp.fitMapToEntries();
 	}
 
 	onDateRangeChange(dateRange: DateRange) {

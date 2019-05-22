@@ -15,7 +15,7 @@ import {MapLocationComponent} from "../map-location/map-location.component";
 	styleUrls: ['./entry-editor.component.less']
 })
 export class EntryEditorComponent implements OnInit {
-	private entryData: EntryData = EntryEditorComponent.buildFreshEntryData(this.geoService.getDefaultLocation());
+	private _entryData: EntryData = EntryEditorComponent.buildFreshEntryData(this.geoService.getDefaultLocation());
 	private locationOrDefaultPromise: Promise<LatLong> = this.geoService.getLocationOrDefault();
 	noteCtrl = new FormControl();
 	dateMoment: Moment;
@@ -23,6 +23,7 @@ export class EntryEditorComponent implements OnInit {
 		names: [],
 		tags: []
 	};
+	loadedPromise: Promise<{}>;
 	isLoading = true;
 
 	@ViewChild(AutocompleteComponent) private nameComp: AutocompleteComponent;
@@ -49,22 +50,30 @@ export class EntryEditorComponent implements OnInit {
 				});
 			}
 
-			const nameExactMatch = this.guess.names.includes(this.entryData.name);
+			const nameExactMatch = this.guess.names.includes(this._entryData.name);
 			if (!nameExactMatch) {
-				this.nameComp.focus().then(() => {
-					if (this.entryData.name.length === 0) {
-						this.nameComp.close();
-					}
+				this.loadedPromise.then(() => {
+					this.nameComp.focus().then(() => {
+						if (this._entryData.name.length === 0) {
+							this.nameComp.close();
+						}
+					});
 				});
 			}
 
 			//emit change events (with debounce)
 			this.changeEvent.pipe(
 				debounceTime(500)
-			).subscribe(() => this.change.emit(this.entryData));
+			).subscribe(() => this.change.emit(this._entryData));
 		}));
 
-		Promise.all(loadPromises).finally(() => this.isLoading = false);
+		this.loadedPromise = Promise.all(loadPromises)
+			.finally(() => this.isLoading = false)
+			.then(() => {
+				return new Promise(resolve => {
+					setTimeout(resolve, 0); //delay to give template time to respond to this.isLoading = false
+				});
+			});
 	}
 
 	onNameChange(name) {
@@ -95,22 +104,24 @@ export class EntryEditorComponent implements OnInit {
 		this.mapComp.centerAndZoom();
 	}
 
-	get data(): EntryData {
-		return this.entryData;
+	get entryData(): EntryData {
+		return this._entryData;
 	}
 
 	private ignoreUpdates = false;
-	private update(data, suppressDisplayUpdates = false) {
+	private update(data: Partial<EntryData>, suppressDisplayUpdates = false) {
 		if (this.ignoreUpdates) return;
 		this.ignoreUpdates = true;
 
-		Object.assign(this.entryData, data);
+		Object.assign(this._entryData, data);
 		if (!suppressDisplayUpdates) {
-			this.nameComp.set(this.entryData.name);
-			this.tagsComp.set(this.entryData.tags);
-			this.noteCtrl.setValue(this.entryData.note);
-			this.dateMoment = moment.unix(this.entryData.unixTimestamp);
-			this.mapComp.set(this.entryData.location);
+			this.loadedPromise.then(() => {
+				this.nameComp.set(this._entryData.name);
+				this.tagsComp.set(this._entryData.tags);
+				this.noteCtrl.setValue(this._entryData.note);
+				this.dateMoment = moment.unix(this._entryData.unixTimestamp);
+				this.mapComp.set(this._entryData.location);
+			});
 		}
 		this.changeEvent.next();
 

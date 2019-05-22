@@ -5,12 +5,15 @@ import {BrowseComponent} from "./browse/browse.component";
 import {LoginComponent} from "./login/login.component";
 import {LoginRouteGuard} from "./login-route.guard";
 import {SandboxComponent} from "./sandbox/sandbox.component";
+import {EntryComponent} from "./entry/entry.component";
+import {entryIdParam} from "./routing-params";
 
 const routes: Routes = [
 	{path: 'login', component: LoginComponent},
 	{path: '', component: AddComponent, canActivate: [LoginRouteGuard]},
 	{path: 'add', component: AddComponent, canActivate: [LoginRouteGuard]},
 	{path: 'browse', component: BrowseComponent, canActivate: [LoginRouteGuard]},
+	{path: `entry/:${entryIdParam}`, component: EntryComponent, canActivate: [LoginRouteGuard]},
 	{path: 'sandbox', component: SandboxComponent, canActivate: [LoginRouteGuard]},
 ];
 
@@ -18,5 +21,4 @@ const routes: Routes = [
 	imports: [RouterModule.forRoot(routes)],
 	exports: [RouterModule]
 })
-export class AppRoutingModule {
-}
+export class AppRoutingModule {}

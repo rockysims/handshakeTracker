@@ -1,6 +1,6 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import * as moment from "moment";
-import {EntryService} from "../entry.service";
+import {Router} from "@angular/router";
 
 @Component({
 	selector: 'app-entry-view',
@@ -11,14 +11,12 @@ export class EntryViewComponent implements OnInit {
 	moment = moment;
 
 	@Input() private entry: Entry;
-	@Output() private delete = new EventEmitter<Entry>();
 
-	constructor(private entryService: EntryService) {}
+	constructor(private router: Router) {}
 
 	ngOnInit() {}
 
-	deleteClicked(entry: Entry) {
-		this.entryService.delete(entry);
-		this.delete.emit(entry);
+	editClicked(entry: Entry) {
+		this.router.navigateByUrl(`/entry/${entry.id}`);
 	}
 }

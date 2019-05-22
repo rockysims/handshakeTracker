@@ -17,7 +17,7 @@ import {UniqueIdService} from "../unique-id.service";
 })
 export class MapBrowseComponent implements OnInit, AfterViewInit {
 	public mapElemId: string;
-	private viewInit$ = new Subject<void>();
+	private viewInit$ = new Subject<void>(); //TODO: change to Deferred
 	private selectedId: string|null = null;
 	private features;
 	private vectorSource;
@@ -126,7 +126,10 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	async set(entries: Entry[], fit: boolean) {
+	async setEntries(
+		entries: Entry[],
+		fitMapToEntries: boolean
+	) {
 		await this.viewInit$.toPromise();
 
 		this.features = entries.map(entry => {
@@ -144,10 +147,10 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		this.vectorSource.clear();
 		this.vectorSource.addFeatures(this.features);
 
-		if (fit) this.fit();
+		if (fitMapToEntries) this.fitMapToEntries();
 	}
 
-	async fit() {
+	async fitMapToEntries() {
 		await this.viewInit$.toPromise();
 
 		if (this.features.length > 0) {
