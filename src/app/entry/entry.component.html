@@ -1,8 +1,16 @@
 <app-entry-editor
 	[entryDataOrPromise]="entryDataPromise"
 ></app-entry-editor>
-<button class="mat-button mat-raised-button" (click)="cancel()">Cancel</button>
-<button class="mat-button mat-raised-button" (click)="save()">Save</button>
+<div class="vertical-spacer"></div>
+<div>
+	<button class="mat-button mat-raised-button" (click)="delete()">Delete</button>
+	<span class="float-right">
+		<button class="mat-button mat-raised-button" (click)="cancel()">Cancel</button>
+		<span class="horizontal-spacer"></span>
+		<button class="mat-button mat-raised-button" (click)="save()">Save</button>
+	</span>
+</div>
 <br/>
-//TODO: change to pretty saveInProgress indicator<br/>
-saveInProgress: {{saveInProgress}}
+//TODO: change to pretty xInProgress indicators<br/>
+saveInProgress: {{saveInProgress}}<br/>
+deleteInProgress: {{deleteInProgress}}<br/>

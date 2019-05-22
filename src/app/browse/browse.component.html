@@ -38,7 +38,6 @@
 <div *ngFor="let entry of displayEntries$ | async">
 	<app-entry-view
 		[entry]="entry"
-		(delete)="onDelete($event)"
 	></app-entry-view>
 	<br/>
 </div>

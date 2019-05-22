@@ -18,6 +18,7 @@ import {EndpointService} from "../endpoint.service";
 import {MapBrowseComponent} from "../map-browse/map-browse.component";
 import * as moment from "moment";
 import {DateRangeSliderComponent} from "../date-range-slider/date-range-slider.component";
+import {RecentChangeService} from "../recent-change.service";
 
 @Component({
 	selector: 'app-browse',
@@ -34,7 +35,6 @@ export class BrowseComponent implements OnInit, OnDestroy {
 		refresh$: new Subject<void>()
 	};
 	private mapSelectedEntryId$ = new BehaviorSubject<string|null>(null);
-	private recentlyDeletedEntryIds = [];
 	private resultEntries$ = new BehaviorSubject<Entry[]>([]);
 	displayEntries$: Observable<Entry[]>;
 	searchTextCtrl = new FormControl();
@@ -55,6 +55,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 
 	constructor(
 		private db: AngularFirestore,
+		private recentChangeService: RecentChangeService,
 		private endpointService: EndpointService
 	) {
 		this.entriesIndex = algoliasearch(environment.algolia.appId, environment.algolia.searchKey)
@@ -166,14 +167,7 @@ export class BrowseComponent implements OnInit, OnDestroy {
 
 	runSearch(searchText: string, mapBoundsOrNull: MapBounds|null, dateRangeOrNull: DateRange|null): Promise<Entry[]> {
 		const searchFilters = [];
-
-
-
-		//TODO: change to searchFilters.push(...this.recentChangeService.deletedEntryIds.map(id =>
-		searchFilters.push(...this.recentlyDeletedEntryIds.map(id =>
-
-
-
+		searchFilters.push(...this.recentChangeService.deletedEntryIds.map(id =>
 			`NOT objectID:${id}`
 		));
 		if (mapBoundsOrNull) {
@@ -195,23 +189,13 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			query: searchText,
 			filters: searchFilters.join(' AND ')
 		}).then(results => {
-			return results.hits as Entry[];
+			return (results.hits as Entry[]).map(entry => {
+				return this.recentChangeService.editedEntryById[entry.id] || entry;
+			});
 		}, err => {
 			console.error(err);
 			throw err;
 		}).finally(() => console.log('searched'));
-	}
-
-	onDelete(entry) {
-
-
-
-		//TODO: change to this.recentChangeService.deletedEntryIds
-		this.recentlyDeletedEntryIds.push(entry.id);
-
-
-
-		this.filters.refresh$.next();
 	}
 
 	onMapSelect(entryId) {
