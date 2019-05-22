@@ -121,13 +121,13 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			this.filters.dateRange$,
 			this.filters.refresh$
 		).pipe(
-			debounceTime(100), //prevent multiple searches during init
 			//ignore mapBounds$ changes unless mapMode is 'filter'
 			filter(() => {
 				const ignore = justChangedMapBounds && this.mapMode !== 'filter';
 				justChangedMapBounds = false;
 				return !ignore;
-			})
+			}),
+			debounceTime(100) //prevent multiple searches during init
 		).subscribe(([searchText, mapBounds, dateRange]) => {
 			this.runSearch(
 				searchText,
