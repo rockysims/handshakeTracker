@@ -4,7 +4,7 @@
 		<input
 			matInput
 			name="search"
-			placeholder="[algoliaIconHere] Search"
+			placeholder="Search"
 			[formControl]="searchTextCtrl"
 		/>
 	</mat-form-field>
@@ -34,7 +34,7 @@
 	></app-date-range-slider>
 </div>
 <br/>
-<div>Results:</div>
+<div><i class='fab fa-algolia' style="color: #5468FF;"></i>&nbsp;<span style="font-weight: bold;">Results</span>:</div>
 <br/>
 <div *ngFor="let entry of displayEntries$ | async">
 	<app-entry-view
