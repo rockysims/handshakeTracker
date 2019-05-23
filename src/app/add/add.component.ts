@@ -8,6 +8,8 @@ import {EntryService} from "../entry.service";
 	styleUrls: ['./add.component.less']
 })
 export class AddComponent implements OnInit {
+	submitInProgress = false;
+
 	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 
 	constructor(private entryService: EntryService) {}
@@ -19,13 +21,15 @@ export class AddComponent implements OnInit {
 	}
 
 	submit() {
-		//TODO: show a progress indicator
+		this.submitInProgress = true;
 		this.entryService.create(this.entryEditor.entryData)
 			.then(() => {
 				//TODO: show a success indicator (with link to new entry? or show new entry under add form?)
 				this.clear();
 			}, () => {
 				//TODO: show a failure indicator?
-			});
+			}).finally(() =>
+				this.submitInProgress = false
+			);
 	}
 }

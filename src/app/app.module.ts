@@ -40,6 +40,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { MapLocationComponent } from './map-location/map-location.component';
 import { MapBrowseComponent } from './map-browse/map-browse.component';
 import { DateRangeSliderComponent } from './date-range-slider/date-range-slider.component';
+import { ButtonIconComponent } from './button-icon/button-icon.component';
 
 const FIREBASE_IMPORTS = [
 	AngularFireModule.initializeApp(environment.firebase),
@@ -80,6 +81,7 @@ const FORMS_IMPORTS = [
 		MapLocationComponent,
 		MapBrowseComponent,
 		DateRangeSliderComponent,
+		ButtonIconComponent,
 	],
 	imports: [
 		BrowserModule,

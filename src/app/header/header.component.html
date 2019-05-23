@@ -1,32 +1,29 @@
-<div *ngIf="currentUser">
-	<div style="display: flex;">
-		<nav>
-			<a class="mat-button mat-stroked-button" routerLink="/add" routerLinkActive="active">
-				Add
-			</a>
-			&nbsp;
-			<a class="mat-button mat-stroked-button" routerLink="/browse" routerLinkActive="active">
-				Browse
-			</a>
+<div style="display: flex;">
+	<nav *ngIf="!back; else backBlock">
+		<a class="mat-button mat-stroked-button" routerLink="/add" routerLinkActive="active">
+			Add
+		</a>
+		&nbsp;
+		<a class="mat-button mat-stroked-button" routerLink="/browse" routerLinkActive="active">
+			Browse
+		</a>
 
-
-
-			<!-- Sandbox for debugging -->
-			&nbsp;
-			<!--<a class="mat-button mat-stroked-button" routerLink="/sandbox" routerLinkActive="active" style="padding: 0px; min-width: 25px;">-->
-				<!--<span style="color: red;">S</span>-->
-			<!--</a>-->
-
-
-
-		</nav>
-		<span class="fill-space"></span>
-		<button
-			mat-stroked-button
-			(click)="logout()"
-		>
-			<i class="fas fa-sign-out-alt"></i>
-		</button>
-	</div>
-	<hr style="border: 1px solid black; opacity: 0.65;"/>
+		<!-- Sandbox for debugging -->
+		<!--<a class="mat-button mat-stroked-button" routerLink="/sandbox" routerLinkActive="active" style="padding: 0px; min-width: 25px;">-->
+		<!--<span style="color: red;">S</span>-->
+		<!--</a>-->
+	</nav>
+	<ng-template #backBlock>
+		<a class="mat-button mat-stroked-button" [routerLink]="back.path" routerLinkActive="active">
+			<i class="fas fa-arrow-left"></i>&nbsp;&nbsp;{{back.name}}
+		</a>
+	</ng-template>
+	<span class="fill-space"></span>
+	<button
+		mat-stroked-button
+		(click)="logout()"
+	>
+		<i class="fas fa-sign-out-alt"></i>
+	</button>
 </div>
+<hr style="border: 1px solid black; opacity: 0.65;"/>

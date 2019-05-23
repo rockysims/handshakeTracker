@@ -1,7 +1,6 @@
-import {Component} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {AngularFireAuth} from "@angular/fire/auth";
 import {Router} from "@angular/router";
-import {UserService} from "../user.service";
 
 @Component({
 	selector: 'app-header',
@@ -9,16 +8,12 @@ import {UserService} from "../user.service";
 	styleUrls: ['./header.component.less'],
 })
 export class HeaderComponent {
-	constructor(private router: Router,
-				private afAuth: AngularFireAuth,
-				private userService: UserService) {}
+	@Input() private back: {name: string, path: string};
 
-	get currentUser() {
-		return this.userService.currentUser;
-	}
+	constructor(private router: Router,
+				private afAuth: AngularFireAuth) {}
 
 	logout() {
 		this.afAuth.auth.signOut().then(() => this.router.navigateByUrl('/login'));
 	}
-
 }
