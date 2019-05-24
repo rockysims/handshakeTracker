@@ -41,7 +41,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 			if (!snap.empty) {
 				const algoliaPromises: Promise<void>[] = [];
 				const batch = admin.firestore().batch();
-				const entriesIndex = algoliaClient.initIndex('entries');
+				const entriesIndex = algoliaClient.initIndex(`users_${userId}_entries`);
 				snap.forEach(doc => {
 					const entry: any = {
 						objectID: doc.id,
@@ -83,7 +83,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 			if (!snap.empty) {
 				const algoliaPromises: Promise<void>[] = [];
 				const batch = admin.firestore().batch();
-				const entriesIndex = algoliaClient.initIndex('entries');
+				const entriesIndex = algoliaClient.initIndex(`users_${userId}_entries`);
 				snap.forEach(doc => {
 					algoliaPromises.push(new Promise(resolve => {
 						entriesIndex.deleteObject(doc.id, function(err, content) {
@@ -112,7 +112,7 @@ app.get('/update-algolia-index-for/:userId', (req, res) => {
 		function waitForActualAlgoliaUpdate(): Promise<void> {
 			//update latest timestamp in algolia
 			const latestTimestamp = Date.now();
-			const latestIndex = algoliaClient.initIndex('latest');
+			const latestIndex = algoliaClient.initIndex(`users_${userId}_latest`);
 			const updateLatestTimestampPromise = latestIndex.saveObject({
 				objectID: 'timestamp',
 				value: latestTimestamp

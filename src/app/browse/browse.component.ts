@@ -19,6 +19,7 @@ import {MapBrowseComponent} from "../map-browse/map-browse.component";
 import * as moment from "moment";
 import {DateRangeSliderComponent} from "../date-range-slider/date-range-slider.component";
 import {RecentChangeService} from "../recent-change.service";
+import {UserService} from "../user.service";
 
 @Component({
 	selector: 'app-browse',
@@ -56,10 +57,11 @@ export class BrowseComponent implements OnInit, OnDestroy {
 	constructor(
 		private db: AngularFirestore,
 		private recentChangeService: RecentChangeService,
-		private endpointService: EndpointService
+		private endpointService: EndpointService,
+		private userService: UserService
 	) {
 		this.entriesIndex = algoliasearch(environment.algolia.appId, environment.algolia.searchKey)
-			.initIndex('entries');
+			.initIndex(`users_${userService.currentUser.uid}_entries`);
 
 		//refresh results when algolia index is updated
 		db.doc(endpointService.latestIndex()).valueChanges().pipe(
