@@ -1,11 +1,11 @@
 <app-header></app-header>
-<app-entry-editor></app-entry-editor>
+<app-entry-editor (valid)="isValid = $event"></app-entry-editor>
 <div class="vertical-spacer"></div>
 <div>
 	<span class="float-right">
 		<button class="mat-button mat-raised-button" (click)="clear()"><i class="fas fa-trash-restore"></i>&nbsp;&nbsp;Clear</button>
 		<span class="horizontal-spacer"></span>
-		<button class="mat-button mat-raised-button mat-primary" (click)="submit()">
+		<button class="mat-button mat-raised-button mat-primary" (click)="submit()" [disabled]="!isValid || submitInProgress">
 			<app-button-icon icon="check" [inProgress]="submitInProgress"></app-button-icon>
 			Submit
 		</button>

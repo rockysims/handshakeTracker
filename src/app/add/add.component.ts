@@ -9,6 +9,7 @@ import {EntryService} from "../entry.service";
 })
 export class AddComponent implements OnInit {
 	submitInProgress = false;
+	isValid = false;
 
 	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 

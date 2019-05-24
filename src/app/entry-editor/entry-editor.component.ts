@@ -32,6 +32,7 @@ export class EntryEditorComponent implements OnInit {
 	@Input() private entryDataOrPromise: EntryData|Promise<EntryData>;
 	private changeEvent = new Subject();
 	@Output() private change = new EventEmitter<EntryData>();
+	@Output() private valid = new EventEmitter<boolean>();
 
 	constructor(private geoService: GeoService) {}
 
@@ -114,6 +115,7 @@ export class EntryEditorComponent implements OnInit {
 		this.ignoreUpdates = true;
 
 		Object.assign(this._entryData, data);
+		this.validate();
 		if (!suppressDisplayUpdates) {
 			await this.loadedPromise;
 			this.nameComp.set(this._entryData.name);
@@ -125,6 +127,15 @@ export class EntryEditorComponent implements OnInit {
 		this.changeEvent.next();
 
 		this.ignoreUpdates = false;
+	}
+
+	private validate() {
+		const isValid =
+			   typeof(this._entryData.name) === 'string' && this._entryData.name.length > 0
+			&& !isNaN(this._entryData.unixTimestamp)
+			&& !isNaN(this._entryData.location.latitude)
+			&& !isNaN(this._entryData.location.longitude);
+		this.valid.emit(isValid);
 	}
 
 	static buildFreshEntryData(loc: LatLong): EntryData {

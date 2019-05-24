@@ -15,6 +15,7 @@ export class EntryComponent implements OnInit {
 	entryId: string;
 	deleteInProgress = false;
 	saveInProgress = false;
+	isValid = true;
 
 	@ViewChild(EntryEditorComponent) entryEditor: EntryEditorComponent;
 

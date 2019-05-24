@@ -3,17 +3,18 @@
 ></app-header>
 <app-entry-editor
 	[entryDataOrPromise]="entryDataPromise"
+	(valid)="isValid = $event"
 ></app-entry-editor>
 <div class="vertical-spacer"></div>
 <div>
-	<button class="mat-button mat-raised-button mat-warn" (click)="delete()">
+	<button class="mat-button mat-raised-button mat-warn" (click)="delete()" [disabled]="deleteInProgress">
 		<app-button-icon icon="trash-alt" [inProgress]="deleteInProgress"></app-button-icon>
 		Delete
 	</button>
 	<span class="float-right">
 		<button class="mat-button mat-raised-button" (click)="cancel()"><i class="fas fa-ban"></i>&nbsp;&nbsp;Cancel</button>
 		<span class="horizontal-spacer"></span>
-		<button class="mat-button mat-raised-button mat-primary" (click)="save()">
+		<button class="mat-button mat-raised-button mat-primary" (click)="save()" [disabled]="!isValid || deleteInProgress">
 			<app-button-icon icon="check" [inProgress]="saveInProgress"></app-button-icon>
 			Save
 		</button>

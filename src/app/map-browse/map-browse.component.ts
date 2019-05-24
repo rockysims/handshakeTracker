@@ -133,7 +133,7 @@ export class MapBrowseComponent implements OnInit, AfterViewInit {
 		await this.viewInitDeferred.promise;
 
 		this.features = entries.map(entry => {
-			const agePercent = 0; //TODO: calc this
+			const agePercent = 0; //TODO: calc this (100% when > 3 months old?)
 
 			const loc = entry.data.location;
 			const feature = new Feature(new Point([loc.longitude, loc.latitude]));
