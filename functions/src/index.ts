@@ -19,7 +19,7 @@ exports.onEntryCreate = genericEntryDoc.onCreate((snap, context) => {
 	});
 
 	handlers.push(() =>
-		saveUnixTimestamp(snap.get('unixTimestamp'), userId)
+		saveUnixTimestamp(snap.get('unixTimestamp'), snap.id, userId)
 	);
 
 	return runHandlers(handlers, userId);
@@ -60,9 +60,9 @@ exports.onEntryUpdate = genericEntryDoc.onUpdate((change, context) => {
 		} else return false;
 	});
 
-	if (dataBefore.get('unixTimestamp') !== dataAfter.get('unixTimestamp')) {
+	if (dataBefore['unixTimestamp'] !== dataAfter['unixTimestamp']) {
 		handlers.push(() =>
-			saveUnixTimestamp(dataAfter.get('unixTimestamp'), userId)
+			saveUnixTimestamp(dataAfter['unixTimestamp'], change.after!.id, userId)
 		);
 	}
 
@@ -82,7 +82,7 @@ exports.onEntryDelete = genericEntryDoc.onDelete((snap, context) => {
 	});
 
 	handlers.push(() => {
-		return considerDeletingUnixTimestamp(snap.get('unixTimestamp'), entryId, userId);
+		return deletingUnixTimestamp(snap.get('unixTimestamp'), entryId, userId);
 	});
 
 	return runHandlers(handlers, userId);
@@ -98,43 +98,26 @@ function runHandlers(handlers: Handler[], userId: string) {
 	});
 }
 
-function saveUnixTimestamp(unixTs: number, userId: string) {
+function saveUnixTimestamp(unixTs: number, entryId: string, userId: string): Promise<boolean> {
 	const doc = admin.firestore()
 		.collection(`/users/${userId}/derived`)
-		.doc('allEntryUnixTimestamps');
+		.doc('unixTimestampByEntryId');
+	return doc
+		.update({[entryId]: unixTs})
+		.then(() => false); //don't request update of overall latest change timestamp
+}
+function deletingUnixTimestamp(unixTs: number, entryId: string, userId: string): Promise<boolean> {
+	const doc = admin.firestore()
+		.collection(`/users/${userId}/derived`)
+		.doc('unixTimestampByEntryId');
 	return doc
 		.get()
 		.then(snap => {
-			const allEntryUnixTimestamps = snap.data() || {};
-			if (!allEntryUnixTimestamps[unixTs]) {
-				allEntryUnixTimestamps[unixTs] = true;
-				return doc
-					.set(allEntryUnixTimestamps)
-					.then(() => false); //don't request update of overall latest change timestamp
-			} else return false;
-		});
-}
-function considerDeletingUnixTimestamp(unixTs: number, entryId: string, userId: string) {
-	return admin.firestore()
-		.collection(`/users/${userId}/entries`)
-		.where('unixTimestamp', '==', unixTs)
-		.get()
-		.then((entriesSnap: any) => {
-			const foundOtherMatchingEntries = entriesSnap.docs.filter((doc: any) => doc.id !== entryId).length > 0;
-			if (!foundOtherMatchingEntries) {
-				const doc = admin.firestore()
-					.collection(`/users/${userId}/derived`)
-					.doc('allEntryUnixTimestamps');
-				return doc
-					.get()
-					.then(snap => {
-						const allEntryUnixTimestamps = snap.data() || {};
-						delete allEntryUnixTimestamps[unixTs];
-						return doc
-							.set(allEntryUnixTimestamps)
-							.then(() => false); //don't request update of overall latest change timestamp
-					});
-			} else return false;
+			const unixTimestampByEntryId = snap.data() || {};
+			delete unixTimestampByEntryId[entryId];
+			return doc
+				.set(unixTimestampByEntryId)
+				.then(() => false); //don't request update of overall latest change timestamp
 		});
 }
 

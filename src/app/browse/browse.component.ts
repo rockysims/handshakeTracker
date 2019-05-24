@@ -88,10 +88,16 @@ export class BrowseComponent implements OnInit, OnDestroy {
 			});
 
 		//show entry marks on date range slider (and keep marks updated)
-		db.doc(endpointService.allEntryUnixTimestamps()).valueChanges().pipe(
+		db.doc(endpointService.unixTimestampByEntryId()).valueChanges().pipe(
 			takeUntil(this.ngUnsubscribe)
-		).subscribe(allEntryUnixTimestamps => {
-			const unixTimestamps = Object.keys(allEntryUnixTimestamps).map(k => +k) as number[];
+		).subscribe((unixTimestampByEntryId = {}) => {
+			const entryExistsByUnixTimestamp = {};
+			Object.keys(unixTimestampByEntryId).forEach(entryId => {
+				const unixTs = (this.recentChangeService.editedEntryById[entryId] || {})['unixTimestamp']
+					|| unixTimestampByEntryId[entryId];
+				entryExistsByUnixTimestamp[unixTs] = true;
+			});
+			const unixTimestamps = Object.keys(entryExistsByUnixTimestamp).map(k => +k) as number[];
 			this.dateRangeSliderComp.setEntryMarks(unixTimestamps);
 		});
 	}
