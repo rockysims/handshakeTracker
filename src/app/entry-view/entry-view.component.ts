@@ -10,7 +10,7 @@ import {Router} from "@angular/router";
 export class EntryViewComponent implements OnInit {
 	moment = moment;
 
-	@Input() private entry: Entry;
+	@Input() entry: Entry;
 
 	constructor(private router: Router) {}
 

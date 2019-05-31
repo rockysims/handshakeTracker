@@ -6,8 +6,8 @@ import {Component, Input} from '@angular/core';
 	styleUrls: ['./button-icon.component.less']
 })
 export class ButtonIconComponent {
-	@Input() private icon: string;
-	@Input() private inProgress: boolean;
+	@Input() icon: string;
+	@Input() inProgress: boolean;
 
 	constructor() {}
 }

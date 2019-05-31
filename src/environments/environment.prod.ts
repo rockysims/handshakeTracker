@@ -7,5 +7,9 @@ export const environment = {
 		projectId: "handshaketracker",
 		storageBucket: "handshaketracker.appspot.com",
 		messagingSenderId: "257305979665"
+	},
+	algolia: {
+		appId: 'S8U8I3Q7WF',
+		searchKey: 'e16115144ff3895b391ce0cebcf3dfee'
 	}
 };

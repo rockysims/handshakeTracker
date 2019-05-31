@@ -8,7 +8,7 @@ import {Router} from "@angular/router";
 	styleUrls: ['./header.component.less'],
 })
 export class HeaderComponent {
-	@Input() private back: {name: string, path: string};
+	@Input() back: {name: string, path: string};
 
 	constructor(private router: Router,
 				private afAuth: AngularFireAuth) {}
